@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30320.27
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentBotFunc", "RentBotFunc.csproj", "{128BF699-0804-42E3-9967-4BEAA0DF16FE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentBot", "RentBot.csproj", "{128BF699-0804-42E3-9967-4BEAA0DF16FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
