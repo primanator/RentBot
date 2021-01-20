@@ -12,14 +12,20 @@ namespace RentBot
     public static class TelegramWebhookFunc
     {
         [FunctionName("TelegramWebhookFunc")]
-        public static async void Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ILogger log)
+        public static async void Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req, ILogger log)
         {
-            var requestBody = await req.ReadAsStringAsync();
-            log.LogInformation("requestbody: " + requestBody);
-            var updateMessage = JsonConvert.DeserializeObject<Update>(requestBody);
-            var botSecret = Environment.GetEnvironmentVariable("BOT_SECRET", EnvironmentVariableTarget.Process);
-            var botClient = new BotClient(new TelegramBotClient(botSecret), log);
-            botClient.Process(updateMessage);
+            try
+            {
+                var requestBody = await req.ReadAsStringAsync();
+                log.LogInformation("requestbody: " + requestBody);
+                var updateMessage = JsonConvert.DeserializeObject<Update>(requestBody);
+                var botSecret = Environment.GetEnvironmentVariable("BOT_SECRET", EnvironmentVariableTarget.Process);
+                new BotClient(new TelegramBotClient(botSecret), log).Process(updateMessage);
+            }
+            catch(Exception ex)
+            {
+                log.LogError("webhook func error: " + ex.Message);
+            }
         }
     }
 }
