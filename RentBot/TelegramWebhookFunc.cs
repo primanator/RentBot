@@ -6,6 +6,8 @@ using Newtonsoft.Json;
 using Telegram.Bot.Types;
 using Telegram.Bot;
 using System;
+using RentBot.Services.Implementation;
+using RentBot.Factory;
 
 namespace RentBot
 {
@@ -20,11 +22,14 @@ namespace RentBot
                 log.LogInformation("requestbody: " + requestBody);
                 var updateMessage = JsonConvert.DeserializeObject<Update>(requestBody);
                 var botSecret = Environment.GetEnvironmentVariable("BOT_SECRET", EnvironmentVariableTarget.Process);
-                new BotClient(new TelegramBotClient(botSecret), log).Process(updateMessage);
+                var handlerFactory = new UpdateHandlerFactory(log);
+                var telegramClient = new TelegramBotClient(botSecret);
+                var botService = new BotService(handlerFactory, telegramClient, log);
+                await botService.ProcessAsync(updateMessage);
             }
             catch(Exception ex)
             {
-                log.LogError("webhook func error: " + ex.Message);
+                log.LogError($"{nameof(TelegramWebhookFunc)} encountered error: {ex.Message}\n StackTrace: {ex.StackTrace}");
             }
         }
     }
