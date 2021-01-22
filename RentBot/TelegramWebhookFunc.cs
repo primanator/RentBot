@@ -22,8 +22,9 @@ namespace RentBot
                 log.LogInformation("requestbody: " + requestBody);
                 var updateMessage = JsonConvert.DeserializeObject<Update>(requestBody);
                 var botSecret = Environment.GetEnvironmentVariable("BOT_SECRET", EnvironmentVariableTarget.Process);
-                var handlerFactory = new UpdateHandlerFactory(log);
                 var telegramClient = new TelegramBotClient(botSecret);
+                var commandService = new CommandService(telegramClient);
+                var handlerFactory = new HandlerFactory(commandService, log);
                 var botService = new BotService(handlerFactory, telegramClient, log);
                 await botService.ProcessAsync(updateMessage);
             }

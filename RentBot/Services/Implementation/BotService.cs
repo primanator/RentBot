@@ -10,11 +10,11 @@ namespace RentBot.Services.Implementation
 {
     internal class BotService : IBotService
     {
-        private readonly IUpdateHandlerFactory _handlerFactory;
+        private readonly IHandlerFactory _handlerFactory;
         private readonly ITelegramBotClient _botClient;
         private readonly ILogger _logger;
 
-        public BotService(IUpdateHandlerFactory handlerFactory, ITelegramBotClient botClient, ILogger logger)
+        public BotService(IHandlerFactory handlerFactory, ITelegramBotClient botClient, ILogger logger)
         {
             _handlerFactory = handlerFactory;
             _botClient = botClient;
@@ -25,9 +25,9 @@ namespace RentBot.Services.Implementation
         {
             try
             {
-                var updateHandler = _handlerFactory.GetHandlerOfType(update.Type);
-                await updateHandler.SendChatActionAsync(_botClient, update);
-                await updateHandler.RespondAsync(_botClient, update);
+                var handler = _handlerFactory.GetHandlerOfType(update.Type);
+                await handler.SendRespondActionAsync(_botClient, update);
+                await handler.RespondAsync(_botClient, update);
             }
             catch (Exception ex)
             {

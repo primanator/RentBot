@@ -6,40 +6,42 @@ using Telegram.Bot.Types.Enums;
 
 namespace RentBot.Factory
 {
-    internal class UpdateHandlerFactory : IUpdateHandlerFactory
+    internal class HandlerFactory : IHandlerFactory
     {
         private readonly ILogger _logger;
-        private Dictionary<UpdateType, IUpdateHandler> _handlersDict;
+        private readonly ICommandService _commandService;
+        private Dictionary<UpdateType, IHandler> _handlersDict;
 
-        public UpdateHandlerFactory(ILogger logger)
+        public HandlerFactory(ICommandService commandService, ILogger logger)
         {
             _logger = logger;
-            _handlersDict = new Dictionary<UpdateType, IUpdateHandler>();
+            _commandService = commandService;
+            _handlersDict = new Dictionary<UpdateType, IHandler>();
         }
 
-        public IUpdateHandler GetHandlerOfType(UpdateType updateType)
+        public IHandler GetHandlerOfType(UpdateType updateType)
         {
             if (_handlersDict.TryGetValue(updateType, out var existingHandler))
             {
                 return existingHandler;
             }
 
-            IUpdateHandler handler = default;
+            IHandler handler = default;
             switch (updateType)
             {
                 case UpdateType.Message:
                     {
-                        handler = new MessageHandler(_logger);
+                        handler = new MessageHandler(_commandService, _logger);
                         break;
                     }
                 case UpdateType.CallbackQuery:
                     {
-                        handler = new CallbackQueryHandler(_logger);
+                        handler = new CallbackQueryHandler(_commandService, _logger);
                         break;
                     }
                 default:
                     {
-                        _logger.LogError($"{nameof(UpdateHandlerFactory)} can't get handler of type {updateType}!");
+                        _logger.LogError($"{nameof(HandlerFactory)} can't get handler of type {updateType}!");
                         break;
                     }
             }

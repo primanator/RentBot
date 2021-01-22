@@ -4,9 +4,9 @@ using Telegram.Bot.Types;
 
 namespace RentBot.Services.Interfaces
 {
-    public interface IUpdateHandler
+    public interface IHandler
     {
-        Task SendChatActionAsync(ITelegramBotClient botClient, Update update);
+        Task SendRespondActionAsync(ITelegramBotClient botClient, Update update);
         Task RespondAsync(ITelegramBotClient botClient, Update update);
     }
 }
