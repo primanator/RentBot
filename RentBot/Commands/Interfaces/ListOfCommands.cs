@@ -1,4 +1,4 @@
-﻿namespace RentBot.Commands
+﻿namespace RentBot.Commands.Interfaces
 {
     public static class ListOfCommands
     {

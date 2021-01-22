@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using RentBot.Services.Interfaces;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace RentBot.Services.Implementation
 {
@@ -26,11 +25,6 @@ namespace RentBot.Services.Implementation
                 return;
             }
             await _commandService.GetDefaultCommand().Execute(update);
-        }
-
-        public async Task SendRespondActionAsync(ITelegramBotClient botClient, Update update)
-        {
-            await botClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
         }
     }
 }

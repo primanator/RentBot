@@ -1,4 +1,4 @@
-﻿using RentBot.Commands;
+﻿using RentBot.Commands.Interfaces;
 
 namespace RentBot.Services.Interfaces
 {

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using RentBot.Commands;
+using RentBot.Commands.Interfaces;
 using RentBot.Services.Interfaces;
 using Telegram.Bot;
 

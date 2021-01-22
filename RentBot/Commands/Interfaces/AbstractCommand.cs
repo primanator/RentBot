@@ -2,7 +2,7 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace RentBot.Commands
+namespace RentBot.Commands.Interfaces
 {
     public abstract class AbstractCommand : ICommand
     {
