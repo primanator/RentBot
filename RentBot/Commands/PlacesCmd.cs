@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using RentBot.Commands.Interfaces;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -6,13 +7,18 @@ using Telegram.Bot.Types.Enums;
 
 namespace RentBot.Commands
 {
-    internal class PlacesCommand: AbstractCommand, ICommand
+    internal class PlacesCmd: ICommand
     {
-        public override string Name => ListOfCommands.Places;
+        private readonly ITelegramBotClient _botClient;
+        private readonly ILogger _logger;
 
-        public PlacesCommand(ITelegramBotClient botClient) : base(botClient) { }
+        public PlacesCmd(ITelegramBotClient botClient, ILogger logger)
+        {
+            _botClient = botClient;
+            _logger = logger;
+        }
 
-        public override async Task Execute(Update update)
+        public async Task ExecuteAsync(Update update)
         {
             await _botClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
 

@@ -7,7 +7,6 @@ using Telegram.Bot.Types;
 using Telegram.Bot;
 using System;
 using RentBot.Services.Implementation;
-using RentBot.Factory;
 
 namespace RentBot
 {
@@ -23,9 +22,8 @@ namespace RentBot
                 var updateMessage = JsonConvert.DeserializeObject<Update>(requestBody);
                 var botSecret = Environment.GetEnvironmentVariable("BOT_SECRET", EnvironmentVariableTarget.Process);
                 var telegramClient = new TelegramBotClient(botSecret);
-                var commandService = new CommandService(telegramClient);
-                var handlerFactory = new HandlerFactory(commandService, log);
-                var botService = new BotService(handlerFactory, telegramClient, log);
+                var commandService = new CommandService(telegramClient, log);
+                var botService = new BotService(commandService, log);
                 await botService.ProcessAsync(updateMessage);
             }
             catch(Exception ex)

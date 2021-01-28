@@ -1,35 +1,64 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using Microsoft.Extensions.Logging;
 using RentBot.Commands;
 using RentBot.Commands.Interfaces;
 using RentBot.Services.Interfaces;
 using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace RentBot.Services.Implementation
 {
     internal class CommandService : ICommandService
     {
-        private readonly List<AbstractCommand> _commands;
+        private readonly ILogger _logger;
+        private readonly Dictionary<string, ICommand> _commandDict;
 
-        public CommandService(ITelegramBotClient botClient)
+        public CommandService(ITelegramBotClient botClient, ILogger logger)
         {
-            _commands = new List<AbstractCommand>
+            _logger = logger;
+            _commandDict = new Dictionary<string, ICommand>()
             {
-                new StartCommand(botClient),
-                new PathCommand(botClient),
-                new PlacesCommand(botClient)
+                { ListOfCommands.Start, new StartCmd(botClient, logger) },
+                { ListOfCommands.Path, new PathCmd(botClient, logger) },
+                { ListOfCommands.Places, new PlacesCmd(botClient, logger) },
+                { ListOfCommands.Default, new DefaultCmd(botClient, logger) }
             };
         }
 
-        public bool TryGetCommandForMessage(string message, out ICommand command)
+        public ICommand GetCommand(Update update)
         {
-            command = _commands.FirstOrDefault(cmd => cmd.Name == message);
-            return command != null;
+            var updateMessage = GetMessage(update);
+
+            if (_commandDict.TryGetValue(updateMessage, out var existingCommand))
+            {
+                return existingCommand;
+            }
+            return _commandDict[ListOfCommands.Default];
         }
 
-        public ICommand GetDefaultCommand()
+        private string GetMessage(Update update)
         {
-            return _commands.FirstOrDefault(cmd => cmd.Name == ListOfCommands.Start);
+            var message = string.Empty;
+            switch (update.Type)
+            {
+                case UpdateType.Message:
+                    {
+                        message = update.Message.Text;
+                        break;
+                    }
+                case UpdateType.CallbackQuery:
+                    {
+                        message = update.CallbackQuery.Data;
+                        break;
+                    }
+                default:
+                    {
+                        _logger.LogError($"{nameof(CommandService)} can't get message for update type {update.Type}!");
+                        break;
+                    }
+            }
+            return message;
         }
     }
 }

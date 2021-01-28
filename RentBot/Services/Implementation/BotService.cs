@@ -1,23 +1,19 @@
-﻿using Telegram.Bot;
-using System;
+﻿using System;
 using Telegram.Bot.Types;
 using Microsoft.Extensions.Logging;
 using RentBot.Services.Interfaces;
-using RentBot.Factory;
 using System.Threading.Tasks;
 
 namespace RentBot.Services.Implementation
 {
     internal class BotService : IBotService
     {
-        private readonly IHandlerFactory _handlerFactory;
-        private readonly ITelegramBotClient _botClient;
+        private readonly ICommandService _commandService;
         private readonly ILogger _logger;
 
-        public BotService(IHandlerFactory handlerFactory, ITelegramBotClient botClient, ILogger logger)
+        public BotService(ICommandService commandService, ILogger logger)
         {
-            _handlerFactory = handlerFactory;
-            _botClient = botClient;
+            _commandService = commandService;
             _logger = logger;
         }
 
@@ -25,8 +21,8 @@ namespace RentBot.Services.Implementation
         {
             try
             {
-                var handler = _handlerFactory.GetHandlerOfType(update.Type);
-                await handler.RespondAsync(_botClient, update);
+                var command = _commandService.GetCommand(update);
+                await command.ExecuteAsync(update);
             }
             catch (Exception ex)
             {

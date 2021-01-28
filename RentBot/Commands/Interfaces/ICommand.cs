@@ -5,6 +5,6 @@ namespace RentBot.Commands.Interfaces
 {
     public interface ICommand
     {
-        Task Execute(Update update);
+        Task ExecuteAsync(Update update);
     }
 }

@@ -1,10 +1,10 @@
 ﻿using RentBot.Commands.Interfaces;
+using Telegram.Bot.Types;
 
 namespace RentBot.Services.Interfaces
 {
     public interface ICommandService
     {
-        bool TryGetCommandForMessage(string message, out ICommand command);
-        ICommand GetDefaultCommand();
+        ICommand GetCommand(Update update);
     }
 }
