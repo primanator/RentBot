@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RentBot.Services.Interfaces;
 using Telegram.Bot;
@@ -26,11 +27,6 @@ namespace RentBot.Services.Implementation
                 return;
             }
             await _commandService.GetDefaultCommand().Execute(update);
-        }
-
-        public async Task SendRespondActionAsync(ITelegramBotClient botClient, Update update)
-        {
-            await botClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
         }
     }
 }

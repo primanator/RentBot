@@ -26,7 +26,6 @@ namespace RentBot.Services.Implementation
             try
             {
                 var handler = _handlerFactory.GetHandlerOfType(update.Type);
-                await handler.SendRespondActionAsync(_botClient, update);
                 await handler.RespondAsync(_botClient, update);
             }
             catch (Exception ex)
