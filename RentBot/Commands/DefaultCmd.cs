@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RentBot.Commands.Interfaces;
+using RentBot.Factories;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -12,9 +13,9 @@ namespace RentBot.Commands
         private readonly ITelegramBotClient _botClient;
         private readonly ILogger _logger;
 
-        public DefaultCmd(ITelegramBotClient botClient, ILogger logger)
+        public DefaultCmd(IClientFactory clientFactory, ILogger logger)
         {
-            _botClient = botClient;
+            _botClient = clientFactory.GetTelegramBotClient();
             _logger = logger;
         }
 

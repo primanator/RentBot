@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Logging;
 using RentBot.Commands;
 using RentBot.Commands.Interfaces;
+using RentBot.Factories;
 using RentBot.Services.Interfaces;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -14,15 +14,15 @@ namespace RentBot.Services.Implementation
         private readonly ILogger _logger;
         private readonly Dictionary<string, ICommand> _commandDict;
 
-        public CommandService(ITelegramBotClient botClient, ILogger logger)
+        public CommandService(IClientFactory clientFactory, ILogger logger)
         {
             _logger = logger;
             _commandDict = new Dictionary<string, ICommand>()
             {
-                { ListOfCommands.Start, new StartCmd(botClient, logger) },
-                { ListOfCommands.Path, new PathCmd(botClient, logger) },
-                { ListOfCommands.Places, new PlacesCmd(botClient, logger) },
-                { ListOfCommands.Default, new DefaultCmd(botClient, logger) }
+                { ListOfCommands.Start, new StartCmd(clientFactory, logger) },
+                { ListOfCommands.Path, new PathCmd(clientFactory, logger) },
+                { ListOfCommands.Places, new PlacesCmd(clientFactory, logger) },
+                { ListOfCommands.Default, new DefaultCmd(clientFactory, logger) }
             };
         }
 

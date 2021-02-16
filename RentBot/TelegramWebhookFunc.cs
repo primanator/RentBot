@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Telegram.Bot.Types;
-using Telegram.Bot;
 using System;
 using RentBot.Services.Implementation;
+using RentBot.Factories;
 
 namespace RentBot
 {
@@ -20,9 +20,8 @@ namespace RentBot
                 var requestBody = await req.ReadAsStringAsync();
                 log.LogInformation("requestbody: " + requestBody);
                 var updateMessage = JsonConvert.DeserializeObject<Update>(requestBody);
-                var botSecret = Environment.GetEnvironmentVariable("BOT_SECRET", EnvironmentVariableTarget.Process);
-                var telegramClient = new TelegramBotClient(botSecret);
-                var commandService = new CommandService(telegramClient, log);
+                var clientFactory = new ClientFactory();
+                var commandService = new CommandService(clientFactory, log);
                 var botService = new BotService(commandService, log);
                 await botService.ProcessAsync(updateMessage);
             }
