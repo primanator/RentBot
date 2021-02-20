@@ -28,7 +28,7 @@ namespace RentBot.Commands
 
             await _botClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, $"path command: {update.CallbackQuery.Data}");
 
-            var blobRef = _blobContainer.GetBlockBlobReference("17071.jpg");
+            var blobRef = _blobContainer.GetBlockBlobReference("bus_schedule.jpg");
 
             await _botClient.SendPhotoAsync(update.CallbackQuery.Message.Chat.Id, blobRef.Uri.AbsoluteUri, "Bus schedule");
         }
