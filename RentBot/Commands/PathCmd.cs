@@ -1,36 +1,49 @@
 ﻿using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage.Blob;
 using RentBot.Commands.Interfaces;
 using RentBot.Factories;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RentBot.Commands
 {
-    internal class PathCmd: ICommand
+    internal class PathCmd: AbstractCmd, ICommand
     {
-        private readonly ITelegramBotClient _botClient;
-        private readonly CloudBlobContainer _blobContainer;
-        private readonly ILogger _logger;
+        private readonly BlobContainerClient _blobContainerClient;
 
-        public PathCmd(IClientFactory clientFactory, ILogger logger)
+        public PathCmd(IClientFactory clientFactory, ILogger logger) : base(clientFactory, logger)
         {
-            _botClient = clientFactory.GetTelegramBotClient();
-            _blobContainer = clientFactory.GetCloudBlobContainerClient().GetAwaiter().GetResult();
-            _logger = logger;
+            _blobContainerClient = clientFactory.GetBlobContainerClient();
         }
 
-        public async Task ExecuteAsync(Update update)
+        public override async Task ExecuteAsync(Update update)
         {
-            await _botClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
+            await BotClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, "Got it!");
+            
+            if (DetailedCommand.Equals(ListOfCommands.BusSchedule, System.StringComparison.InvariantCultureIgnoreCase))
+            {
+                var uri = _blobContainerClient.GetBlobClient("bus_schedule.jpg").Uri.AbsoluteUri;
 
-            await _botClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, $"path command: {update.CallbackQuery.Data}");
-
-            var blobRef = _blobContainer.GetBlockBlobReference("bus_schedule.jpg");
-
-            await _botClient.SendPhotoAsync(update.CallbackQuery.Message.Chat.Id, blobRef.Uri.AbsoluteUri, "Bus schedule");
+                await BotClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.UploadPhoto);
+                await BotClient.SendPhotoAsync(update.CallbackQuery.Message.Chat.Id, uri, "Here you go :)");
+            }
+            else if (DetailedCommand.Equals(ListOfCommands.HomeGeo, System.StringComparison.InvariantCultureIgnoreCase))
+            {
+                await BotClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.FindLocation);
+                await BotClient.SendLocationAsync(update.CallbackQuery.Message.Chat.Id, 50.6351221f, 30.7111802f);
+            }
+            else
+            {
+                await BotClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
+                await BotClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id, "How do you want to get to us?",
+                    replyMarkup: new InlineKeyboardMarkup(new[]
+                    {
+                    new [] { InlineKeyboardButton.WithCallbackData("Bus schedule", ListOfCommands.BusSchedule) },
+                    new [] { InlineKeyboardButton.WithCallbackData("Geolocation", ListOfCommands.HomeGeo) }
+                    }));
+            }
         }
     }
 }

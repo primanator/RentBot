@@ -20,10 +20,7 @@ namespace RentBot
                 var requestBody = await req.ReadAsStringAsync();
                 log.LogInformation("requestbody: " + requestBody);
                 var updateMessage = JsonConvert.DeserializeObject<Update>(requestBody);
-                var clientFactory = new ClientFactory();
-                var commandService = new CommandService(clientFactory, log);
-                var botService = new BotService(commandService, log);
-                await botService.ProcessAsync(updateMessage);
+                await new BotService(new ClientFactory(), log).ProcessAsync(updateMessage);
             }
             catch(Exception ex)
             {

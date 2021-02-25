@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using Microsoft.WindowsAzure.Storage.Blob;
+﻿using Azure.Storage.Blobs;
 using Telegram.Bot;
 
 namespace RentBot.Factories
@@ -7,6 +6,6 @@ namespace RentBot.Factories
     public interface IClientFactory
     {
         ITelegramBotClient GetTelegramBotClient();
-        Task<CloudBlobContainer> GetCloudBlobContainerClient();
+        BlobContainerClient GetBlobContainerClient();
     }
 }

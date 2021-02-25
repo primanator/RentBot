@@ -1,58 +1,59 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage.Blob;
 using RentBot.Commands.Interfaces;
 using RentBot.Factories;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RentBot.Commands
 {
-    internal class PlacesCmd : ICommand
+    internal class PlacesCmd : AbstractCmd, ICommand
     {
-        private readonly ITelegramBotClient _botClient;
-        private readonly CloudBlobContainer _blobContainer;
-        private readonly ILogger _logger;
+        private readonly BlobContainerClient _blobContainerClient;
 
-        public PlacesCmd(IClientFactory clientFactory, ILogger logger)
+        public PlacesCmd(IClientFactory clientFactory, ILogger logger) : base(clientFactory, logger)
         {
-            _botClient = clientFactory.GetTelegramBotClient();
-            _blobContainer = clientFactory.GetCloudBlobContainerClient().GetAwaiter().GetResult();
-            _logger = logger;
+            _blobContainerClient = clientFactory.GetBlobContainerClient();
         }
 
-        [Obsolete]
-        public async Task ExecuteAsync(Update update)
+        public override async Task ExecuteAsync(Update update)
         {
-            await _botClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, $"places command: {update.CallbackQuery.Data}");
+            await BotClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, "Got it!");
 
-            await _botClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
-            await _botClient.SendMediaGroupAsync(update.CallbackQuery.Message.Chat.Id, new InputMediaBase[]
+            if (DetailedCommand.Equals(ListOfCommands.Places, System.StringComparison.InvariantCultureIgnoreCase))
             {
-                new InputMediaPhoto(_blobContainer.GetBlockBlobReference("home1.jpg").Uri.AbsoluteUri) { Caption = "Home" },
-                new InputMediaPhoto(_blobContainer.GetBlockBlobReference("home2.jpg").Uri.AbsoluteUri),
-                new InputMediaPhoto(_blobContainer.GetBlockBlobReference("home3.jpg").Uri.AbsoluteUri),
-                new InputMediaPhoto(_blobContainer.GetBlockBlobReference("home4.jpg").Uri.AbsoluteUri)
-            });
+                await BotClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
+                await BotClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id, "What would you like to see?",
+                    replyMarkup: new InlineKeyboardMarkup(new[]
+                    {
+                    new [] { InlineKeyboardButton.WithCallbackData("Home", ListOfCommands.Home) },
+                    new [] { InlineKeyboardButton.WithCallbackData("Restaurant", ListOfCommands.Restaurant) },
+                    new [] { InlineKeyboardButton.WithCallbackData("River", ListOfCommands.River) }
+                    }));
+                return;
+            }
 
-            await _botClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
-            await _botClient.SendMediaGroupAsync(update.CallbackQuery.Message.Chat.Id, new InputMediaBase[]
-            {
-                new InputMediaPhoto(_blobContainer.GetBlockBlobReference("restaurant1.jpg").Uri.AbsoluteUri) { Caption = "Restaurant" },
-                new InputMediaPhoto(_blobContainer.GetBlockBlobReference("restaurant2.jpg").Uri.AbsoluteUri),
-                new InputMediaPhoto(_blobContainer.GetBlockBlobReference("restaurant3.jpg").Uri.AbsoluteUri)
-            });
+            await BotClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
+            await BotClient.SendMediaGroupAsync(await GetMediaFromBlobByPrefix(DetailedCommand), update.CallbackQuery.Message.Chat.Id);
 
-            await _botClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
-            await _botClient.SendMediaGroupAsync(update.CallbackQuery.Message.Chat.Id, new InputMediaBase[]
+        }
+
+        private async Task<IAlbumInputMedia[]> GetMediaFromBlobByPrefix(string mediaPrefix)
+        {
+            var mediaList = new List<IAlbumInputMedia>();
+            var blobPages = _blobContainerClient.GetBlobsAsync(prefix: mediaPrefix).AsPages();
+
+            await foreach (var blobPage in blobPages)
             {
-                new InputMediaPhoto(_blobContainer.GetBlockBlobReference("river1.jpg").Uri.AbsoluteUri) { Caption = "River" },
-                new InputMediaPhoto(_blobContainer.GetBlockBlobReference("river2.jpg").Uri.AbsoluteUri),
-                new InputMediaPhoto(_blobContainer.GetBlockBlobReference("river3.jpg").Uri.AbsoluteUri),
-                new InputMediaPhoto(_blobContainer.GetBlockBlobReference("river4.jpg").Uri.AbsoluteUri)
-            });
+                foreach (var blobItem in blobPage.Values)
+                {
+                    mediaList.Add(new InputMediaPhoto(_blobContainerClient.GetBlobClient(blobItem.Name).Uri.AbsoluteUri));
+                }
+            }
+            return mediaList.ToArray();
         }
     }
 }

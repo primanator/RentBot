@@ -1,30 +1,25 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RentBot.Commands.Interfaces;
 using RentBot.Factories;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace RentBot.Commands
 {
-    internal class StartCmd : ICommand
+    internal class StartCmd : AbstractCmd, ICommand
     {
-        private readonly ITelegramBotClient _botClient;
-        private readonly ILogger _logger;
+        public StartCmd(IClientFactory clientFactory, ILogger logger) : base(clientFactory, logger) { }
 
-        public StartCmd(IClientFactory clientFactory, ILogger logger)
+        public override async Task ExecuteAsync(Update update)
         {
-            _botClient = clientFactory.GetTelegramBotClient();
-            _logger = logger;
-        }
+            await BotClient.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
 
-        public async Task ExecuteAsync(Update update)
-        {
-            await _botClient.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
+            var responseText = GetText(update.Message.From, DetailedCommand.Equals(ListOfCommands.Start, StringComparison.InvariantCultureIgnoreCase));
 
-            await _botClient.SendTextMessageAsync(update.Message.Chat.Id, GetWelcomingText(update.Message.From),
+            await BotClient.SendTextMessageAsync(update.Message.Chat.Id, responseText,
                 replyMarkup: new InlineKeyboardMarkup(new[]
                 {
                     new [] { InlineKeyboardButton.WithCallbackData("How do I get to your place?", ListOfCommands.Path) },
@@ -32,11 +27,13 @@ namespace RentBot.Commands
                 }));
         }
 
-        private string GetWelcomingText(User user)
+        private string GetText(User user, bool isWelcome)
         {
-            var welcomeText = $"Hi, {user.FirstName}";
-            welcomeText += string.IsNullOrEmpty(user.LastName) ? string.Empty : $" {user.LastName}";
-            return welcomeText + "!";
+            if (isWelcome)
+            {
+                return $"Hi, {user.FirstName}" + (string.IsNullOrEmpty(user.LastName) ? "!" : $" {user.LastName}!");
+            }
+            return $"{user.FirstName}, what we were talking about?";
         }
     }
 }

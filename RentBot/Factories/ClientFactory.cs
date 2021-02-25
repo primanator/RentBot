@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Azure.Storage.Blobs;
 using Telegram.Bot;
 
 namespace RentBot.Factories
@@ -9,19 +8,16 @@ namespace RentBot.Factories
     internal class ClientFactory : IClientFactory
     {
         private ITelegramBotClient _telegramBotClient;
-        private CloudBlobContainer _blobContainerClient;
+        private BlobContainerClient _blobContainerClient;
 
-        public async Task<CloudBlobContainer> GetCloudBlobContainerClient()
+        public BlobContainerClient GetBlobContainerClient()
         {
             if (_blobContainerClient == null)
             {
                 var connectionString = Environment.GetEnvironmentVariable("STORAGE_CONNECTION_STR", EnvironmentVariableTarget.Process);
                 var containerName = Environment.GetEnvironmentVariable("CONTAINER_NAME", EnvironmentVariableTarget.Process);
-                
-                var storageAccount = CloudStorageAccount.Parse(connectionString);
-                var blobClient = storageAccount.CreateCloudBlobClient();
-                _blobContainerClient = blobClient.GetContainerReference(containerName);
-                await _blobContainerClient.CreateIfNotExistsAsync();
+
+                _blobContainerClient = new BlobContainerClient(connectionString, containerName);
             }
             return _blobContainerClient;
         }
