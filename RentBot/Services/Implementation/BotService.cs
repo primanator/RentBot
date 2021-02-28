@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RentBot.Commands;
-using RentBot.Commands.Interfaces;
+using RentBot.Constants;
 using RentBot.Factories;
 using RentBot.Services.Interfaces;
 using Telegram.Bot.Types;
@@ -32,8 +32,9 @@ namespace RentBot.Services.Implementation
                 { ListOfCommands.BusSchedule, pathCommand },
                 { ListOfCommands.Places, placesCommand },
                 { ListOfCommands.Home, placesCommand },
-                { ListOfCommands.Restaurant, placesCommand },
-                { ListOfCommands.River, placesCommand }
+                { ListOfCommands.Field, placesCommand },
+                { ListOfCommands.River, placesCommand },
+                { ListOfCommands.Forest, placesCommand }
             };
         }
 
