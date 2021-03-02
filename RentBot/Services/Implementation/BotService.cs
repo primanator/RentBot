@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RentBot.Commands;
-using RentBot.Constants;
 using RentBot.Factories;
 using RentBot.Services.Interfaces;
 using Telegram.Bot.Types;
@@ -14,27 +14,18 @@ namespace RentBot.Services.Implementation
     internal class BotService : IBotService
     {
         private readonly ILogger _logger;
-        private readonly Dictionary<string, AbstractCmd> _commandDict;
+        private readonly List<AbstractCommand> _commandsList;
+        private readonly AbstractCommand _defaultCommand;
 
         public BotService(IClientFactory clientFactory, ILogger logger)
         {
             _logger = logger;
-            var startCommand = new StartCmd(clientFactory, logger);
-            var pathCommand = new PathCmd(clientFactory, logger);
-            var placesCommand = new PlacesCmd(clientFactory, logger);
-
-            _commandDict = new Dictionary<string, AbstractCmd>()
+            _defaultCommand = new StartCommand(clientFactory, logger);
+            _commandsList = new List<AbstractCommand>
             {
-                { ListOfCommands.Start, startCommand },
-                { ListOfCommands.Default, startCommand },
-                { ListOfCommands.Path, pathCommand },
-                { ListOfCommands.HomeGeo, pathCommand },
-                { ListOfCommands.BusSchedule, pathCommand },
-                { ListOfCommands.Places, placesCommand },
-                { ListOfCommands.Home, placesCommand },
-                { ListOfCommands.Field, placesCommand },
-                { ListOfCommands.River, placesCommand },
-                { ListOfCommands.Forest, placesCommand }
+                _defaultCommand,
+                new PathCommand(clientFactory, logger),
+                new PlacesCommand(clientFactory, logger)
             };
         }
 
@@ -42,20 +33,11 @@ namespace RentBot.Services.Implementation
         {
             try
             {
-                var commandToExecute = default(AbstractCmd);
-                var updateMessage = GetMessage(update);
+                var message = GetMessage(update);
+                var command = GetCommandByMessage(message);
+                command.SelectedMessage = message;
 
-                if (_commandDict.TryGetValue(updateMessage, out var existingCommand))
-                {
-                    commandToExecute = existingCommand;
-                }
-                else
-                {
-                    commandToExecute = _commandDict[ListOfCommands.Default];
-                }
-
-                commandToExecute.DetailedCommand = updateMessage;
-                await commandToExecute.ExecuteAsync(update);
+                await command.ExecuteAsync(update);
             }
             catch (Exception ex)
             {
@@ -85,6 +67,16 @@ namespace RentBot.Services.Implementation
                     }
             }
             return message;
+        }
+
+        private AbstractCommand GetCommandByMessage(string message)
+        {
+            var command = _commandsList.FirstOrDefault(cmd => cmd.AvailableMessages.Contains(message));
+            if (command == default(AbstractCommand))
+            {
+                command = _defaultCommand;
+            }
+            return command;
         }
     }
 }

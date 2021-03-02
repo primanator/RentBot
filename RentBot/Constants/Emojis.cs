@@ -10,5 +10,7 @@
         public const string Eyes = "\U0001F440";
         public const string Minibus = "\U0001F690";
         public const string Pushpin = "\U0001F4CD";
+        public const string LeftPointing = "\U0001F448";
+        public const string RightPointing = "\U0001F449";
     }
 }

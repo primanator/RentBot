@@ -12,29 +12,37 @@ using Emojis = RentBot.Constants.Emojis;
 
 namespace RentBot.Commands
 {
-    internal class PlacesCmd : AbstractCmd, ICommand
+    internal class PlacesCommand : AbstractCommand, ICommand
     {
         private readonly BlobContainerClient _blobContainerClient;
 
-        public PlacesCmd(IClientFactory clientFactory, ILogger logger) : base(clientFactory, logger)
+        public PlacesCommand(IClientFactory clientFactory, ILogger logger) : base(clientFactory, logger)
         {
             _blobContainerClient = clientFactory.GetBlobContainerClient();
+            AvailableMessages = new List<string>
+            {
+                Messages.Places,
+                Messages.Home,
+                Messages.Field,
+                Messages.River,
+                Messages.Forest
+            };
         }
 
         public override async Task ExecuteAsync(Update update)
         {
             await BotClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, "Got it!");
 
-            if (DetailedCommand.Equals(ListOfCommands.Places, System.StringComparison.InvariantCultureIgnoreCase))
+            if (SelectedMessage.Equals(Messages.Places, System.StringComparison.InvariantCultureIgnoreCase))
             {
                 await BotClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
                 await BotClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id, "What would you like to see?",
                     replyMarkup: new InlineKeyboardMarkup(new[]
                     {
-                        new [] { InlineKeyboardButton.WithCallbackData($"Home {Emojis.House}", ListOfCommands.Home) },
-                        new [] { InlineKeyboardButton.WithCallbackData($"River {Emojis.WaterWave}", ListOfCommands.River) }, 
-                        new [] { InlineKeyboardButton.WithCallbackData($"Forest {Emojis.Tree}", ListOfCommands.Forest) },
-                        new [] { InlineKeyboardButton.WithCallbackData($"Field {Emojis.EarOfRice}", ListOfCommands.Field) }
+                        new [] { InlineKeyboardButton.WithCallbackData($"Home {Emojis.House}", Messages.Home) },
+                        new [] { InlineKeyboardButton.WithCallbackData($"River {Emojis.WaterWave}", Messages.River) }, 
+                        new [] { InlineKeyboardButton.WithCallbackData($"Forest {Emojis.Tree}", Messages.Forest) },
+                        new [] { InlineKeyboardButton.WithCallbackData($"Field {Emojis.EarOfRice}", Messages.Field) }
                     }));
                 return;
             }
@@ -42,7 +50,7 @@ namespace RentBot.Commands
             //update.CallbackQuery.Message.From.LanguageCode
 
             await BotClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
-            await BotClient.SendMediaGroupAsync(await GetMediaFromBlobByPrefix(DetailedCommand), update.CallbackQuery.Message.Chat.Id);
+            await BotClient.SendMediaGroupAsync(await GetMediaFromBlobByPrefix(SelectedMessage), update.CallbackQuery.Message.Chat.Id);
         }
 
         private async Task<IAlbumInputMedia[]> GetMediaFromBlobByPrefix(string mediaPrefix)

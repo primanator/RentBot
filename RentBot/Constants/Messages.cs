@@ -1,6 +1,6 @@
 ﻿namespace RentBot.Constants
 {
-    public static class ListOfCommands
+    public static class Messages
     {
         public const string Start = "/start";
         public const string Path = "path";
@@ -12,5 +12,7 @@
         public const string BusSchedule = "bus_schedule";
         public const string HomeGeo = "home_geo";
         public const string Default = "default";
+        public const string ToCity = "to_city";
+        public const string FromCity = "from_city";
     }
 }
