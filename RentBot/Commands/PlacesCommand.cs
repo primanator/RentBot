@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using RentBot.Commands.Interfaces;
 using RentBot.Constants;
 using RentBot.Factories;
+using RentBot.Model;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -29,14 +30,14 @@ namespace RentBot.Commands
             };
         }
 
-        public override async Task ExecuteAsync(Update update)
+        public override async Task ExecuteAsync(TelegramRequest request)
         {
-            await BotClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, "Got it!");
+            await BotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
 
-            if (SelectedMessage.Equals(Messages.Places, System.StringComparison.InvariantCultureIgnoreCase))
+            if (request.Message.Equals(Messages.Places, System.StringComparison.InvariantCultureIgnoreCase))
             {
-                await BotClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
-                await BotClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id, "What would you like to see?",
+                await BotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+                await BotClient.SendTextMessageAsync(request.ChatId, "What would you like to see?",
                     replyMarkup: new InlineKeyboardMarkup(new[]
                     {
                         new [] { InlineKeyboardButton.WithCallbackData($"Home {Emojis.House}", Messages.Home) },
@@ -49,8 +50,10 @@ namespace RentBot.Commands
 
             //update.CallbackQuery.Message.From.LanguageCode
 
-            await BotClient.SendChatActionAsync(update.CallbackQuery.Message.Chat.Id, ChatAction.Typing);
-            await BotClient.SendMediaGroupAsync(await GetMediaFromBlobByPrefix(SelectedMessage), update.CallbackQuery.Message.Chat.Id);
+            await BotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+            await BotClient.SendMediaGroupAsync(await GetMediaFromBlobByPrefix(request.Message), request.ChatId);
+
+            await FallbackAsync(request.ChatId, "Looks nice!", $"Yeap! {Emojis.HeartEyes}");
         }
 
         private async Task<IAlbumInputMedia[]> GetMediaFromBlobByPrefix(string mediaPrefix)

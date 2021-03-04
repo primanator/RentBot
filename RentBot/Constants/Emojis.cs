@@ -12,5 +12,8 @@
         public const string Pushpin = "\U0001F4CD";
         public const string LeftPointing = "\U0001F448";
         public const string RightPointing = "\U0001F449";
+        public const string OkSign = "\U0001F44C";
+        public const string WavingHand = "\U0001F44B";
+        public const string HeartEyes = "\U0001F60D";
     }
 }

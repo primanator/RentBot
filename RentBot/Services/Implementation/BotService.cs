@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RentBot.Commands;
 using RentBot.Factories;
+using RentBot.Model;
 using RentBot.Services.Interfaces;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace RentBot.Services.Implementation
 {
@@ -29,44 +28,17 @@ namespace RentBot.Services.Implementation
             };
         }
 
-        public async Task ProcessAsync(Update update)
+        public async Task ProcessAsync(TelegramRequest request)
         {
             try
             {
-                var message = GetMessage(update);
-                var command = GetCommandByMessage(message);
-                command.SelectedMessage = message;
-
-                await command.ExecuteAsync(update);
+                var command = GetCommandByMessage(request.Message);
+                await command.ExecuteAsync(request);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"{nameof(BotService)} encountered error: {ex.Message}\n StackTrace: {ex.StackTrace}");
             }
-        }
-
-        private string GetMessage(Update update)
-        {
-            var message = string.Empty;
-            switch (update.Type)
-            {
-                case UpdateType.Message:
-                    {
-                        message = update.Message.Text;
-                        break;
-                    }
-                case UpdateType.CallbackQuery:
-                    {
-                        message = update.CallbackQuery.Data;
-                        break;
-                    }
-                default:
-                    {
-                        _logger.LogError($"{nameof(BotService)} can't get message for update type {update.Type}!");
-                        break;
-                    }
-            }
-            return message;
         }
 
         private AbstractCommand GetCommandByMessage(string message)

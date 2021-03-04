@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using RentBot.Commands.Interfaces;
 using RentBot.Constants;
 using RentBot.Factories;
+using RentBot.Model;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -19,17 +20,18 @@ namespace RentBot.Commands
             AvailableMessages = new List<string>
             {
                 Messages.Start,
-                Messages.Default
+                Messages.Default,
+                Messages.FallBack
             };
         }
 
-        public override async Task ExecuteAsync(Update update)
+        public override async Task ExecuteAsync(TelegramRequest request)
         {
-            await BotClient.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
+            await BotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
 
-            var response = GetResponse(update.Message.From, SelectedMessage.Equals(Messages.Start, StringComparison.InvariantCultureIgnoreCase));
+            var response = GetResponse(request);
 
-            await BotClient.SendTextMessageAsync(update.Message.Chat.Id, response,
+            await BotClient.SendTextMessageAsync(request.ChatId, response,
                 replyMarkup: new InlineKeyboardMarkup(new[]
                 {
                     new [] { InlineKeyboardButton.WithCallbackData($"Maps {Emojis.Map}", Messages.Path) },
@@ -37,13 +39,17 @@ namespace RentBot.Commands
                 }));
         }
 
-        private string GetResponse(User user, bool isWelcome)
+        private string GetResponse(TelegramRequest request)
         {
-            if (isWelcome)
+            var name = request.User.FirstName + (string.IsNullOrEmpty(request.User.LastName) ? string.Empty : $" {request.User.LastName}");
+            if (request.Message.Equals(Messages.Start, StringComparison.InvariantCultureIgnoreCase))
             {
-                return $"Hi, {user.FirstName}" + (string.IsNullOrEmpty(user.LastName) ? "!" : $" {user.LastName}!\nHow can I help you?");
+                return $"Hi, {name}!\nHow can I help you?";
+            } else if (request.Message.Equals(Messages.FallBack, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "Can I help you with anything else?";
             }
-            return $"{user.FirstName}, what we were talking about?";
+            return $"What we were talking about, {name}?";
         }
     }
 }

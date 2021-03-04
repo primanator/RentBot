@@ -7,6 +7,7 @@ using Telegram.Bot.Types;
 using System;
 using RentBot.Services.Implementation;
 using RentBot.Factories;
+using RentBot.Model;
 
 namespace RentBot
 {
@@ -17,10 +18,10 @@ namespace RentBot
         {
             try
             {
-                var requestBody = await req.ReadAsStringAsync();
-                log.LogInformation("requestbody: " + requestBody);
-                var updateMessage = JsonConvert.DeserializeObject<Update>(requestBody);
-                await new BotService(new ClientFactory(), log).ProcessAsync(updateMessage);
+                var requestStr = await req.ReadAsStringAsync();
+                log.LogInformation("RequestStr: " + requestStr);
+                var request = new TelegramRequest(JsonConvert.DeserializeObject<Update>(requestStr));
+                await new BotService(new ClientFactory(), log).ProcessAsync(request);
             }
             catch(Exception ex)
             {
