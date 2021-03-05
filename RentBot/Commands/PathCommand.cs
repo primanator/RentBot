@@ -28,7 +28,7 @@ namespace RentBot.Commands
 
         public override async Task ExecuteAsync(TelegramRequest request)
         {
-            await BotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+            await TryAnswerCallbackQueryAsync(request);
             var fallbackNeeded = false;
 
             switch (request.Message)
@@ -96,7 +96,9 @@ namespace RentBot.Commands
 
             if (fallbackNeeded)
             {
-                await FallbackAsync(request.ChatId, "Have a nice trip!", new InlineKeyboardMarkup(new []
+                var responseText = await TranslateAsync("Have a nice trip!", request.User.LanguageCode);
+
+                await FallbackAsync(request.ChatId, responseText, new InlineKeyboardMarkup(new []
                 {
                     new [] { InlineKeyboardButton.WithCallbackData($"Okay! {Emojis.OkSign}", Messages.FallBack) }
                 }));

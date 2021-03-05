@@ -6,7 +6,6 @@ using RentBot.Commands.Interfaces;
 using RentBot.Constants;
 using RentBot.Factories;
 using RentBot.Model;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Emojis = RentBot.Constants.Emojis;
@@ -20,17 +19,13 @@ namespace RentBot.Commands
             AvailableMessages = new List<string>
             {
                 Messages.Start,
-                Messages.Default,
                 Messages.FallBack
             };
         }
 
         public override async Task ExecuteAsync(TelegramRequest request)
         {
-            if (!string.IsNullOrEmpty(request.CallbackQueryId))
-            {
-                await BotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-            }
+            await TryAnswerCallbackQueryAsync(request);
 
             await BotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
 

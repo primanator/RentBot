@@ -4,7 +4,6 @@
     {
         public const string Start = "/start";
         public const string FallBack = "fallback";
-        public const string Default = "default";
         public const string Path = "path";
         public const string Places = "places";
         public const string Home = "home";

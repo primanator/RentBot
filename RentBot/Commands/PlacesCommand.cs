@@ -32,7 +32,7 @@ namespace RentBot.Commands
 
         public override async Task ExecuteAsync(TelegramRequest request)
         {
-            await BotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+            await TryAnswerCallbackQueryAsync(request);
 
             if (request.Message.Equals(Messages.Places, System.StringComparison.InvariantCultureIgnoreCase))
             {
@@ -47,8 +47,6 @@ namespace RentBot.Commands
                     }));
                 return;
             }
-
-            //update.CallbackQuery.Message.From.LanguageCode
 
             await BotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
             await BotClient.SendMediaGroupAsync(await GetMediaFromBlobByPrefix(request.Message), request.ChatId);

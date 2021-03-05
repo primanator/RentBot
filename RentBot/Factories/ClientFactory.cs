@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Azure.Storage.Blobs;
+using Google.Cloud.Translate.V3;
 using Telegram.Bot;
 
 namespace RentBot.Factories
@@ -9,10 +9,11 @@ namespace RentBot.Factories
     {
         private ITelegramBotClient _telegramBotClient;
         private BlobContainerClient _blobContainerClient;
+        private TranslationServiceClient _translationClient;
 
         public BlobContainerClient GetBlobContainerClient()
         {
-            if (_blobContainerClient == null)
+            if (_blobContainerClient == default)
             {
                 var connectionString = Environment.GetEnvironmentVariable("STORAGE_CONNECTION_STR", EnvironmentVariableTarget.Process);
                 var containerName = Environment.GetEnvironmentVariable("CONTAINER_NAME", EnvironmentVariableTarget.Process);
@@ -24,12 +25,22 @@ namespace RentBot.Factories
 
         public ITelegramBotClient GetTelegramBotClient()
         {
-            if (_telegramBotClient == null)
+            if (_telegramBotClient == default)
             {
                 var botSecret = Environment.GetEnvironmentVariable("BOT_SECRET", EnvironmentVariableTarget.Process);
+
                 _telegramBotClient = new TelegramBotClient(botSecret);
             }
             return _telegramBotClient;
+        }
+
+        public TranslationServiceClient GetTranslationClient()
+        {
+            if (_translationClient == default)
+            {
+                _translationClient = TranslationServiceClient.Create();
+            }
+            return _translationClient;
         }
     }
 }
