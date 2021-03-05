@@ -6,7 +6,6 @@ using RentBot.Commands.Interfaces;
 using RentBot.Constants;
 using RentBot.Factories;
 using RentBot.Model;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Emojis = RentBot.Constants.Emojis;
@@ -40,7 +39,8 @@ namespace RentBot.Commands
                 replyMarkup: new InlineKeyboardMarkup(new[]
                 {
                     new [] { InlineKeyboardButton.WithCallbackData($"Maps {Emojis.Map}", Messages.Path) },
-                    new [] { InlineKeyboardButton.WithCallbackData($"What's around? {Emojis.Eyes}", Messages.Places) }
+                    new [] { InlineKeyboardButton.WithCallbackData($"What's around? {Emojis.Eyes}", Messages.Places) },
+                    new [] { InlineKeyboardButton.WithUrl($"Booking {Emojis.HouseWithGarden}", "https://abnb.me/Y5SjYolOneb") }
                 }));
         }
 

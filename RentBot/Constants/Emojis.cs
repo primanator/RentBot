@@ -15,5 +15,6 @@
         public const string OkSign = "\U0001F44C";
         public const string WavingHand = "\U0001F44B";
         public const string HeartEyes = "\U0001F60D";
+        public const string HouseWithGarden = "\U0001F3E1";
     }
 }
