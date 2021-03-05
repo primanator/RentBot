@@ -53,7 +53,10 @@ namespace RentBot.Commands
             await BotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
             await BotClient.SendMediaGroupAsync(await GetMediaFromBlobByPrefix(request.Message), request.ChatId);
 
-            await FallbackAsync(request.ChatId, "Looks nice!", $"Yeap! {Emojis.HeartEyes}");
+            await FallbackAsync(request.ChatId, "Looks nice?", new InlineKeyboardMarkup(new []
+                {
+                    new [] { InlineKeyboardButton.WithCallbackData($"Yeap! {Emojis.HeartEyes}", Messages.FallBack) }
+                }));
         }
 
         private async Task<IAlbumInputMedia[]> GetMediaFromBlobByPrefix(string mediaPrefix)

@@ -96,7 +96,10 @@ namespace RentBot.Commands
 
             if (fallbackNeeded)
             {
-                await FallbackAsync(request.ChatId, "Have a nice trip!", $"Okay! {Emojis.OkSign}");
+                await FallbackAsync(request.ChatId, "Have a nice trip!", new InlineKeyboardMarkup(new []
+                {
+                    new [] { InlineKeyboardButton.WithCallbackData($"Okay! {Emojis.OkSign}", Messages.FallBack) }
+                }));
             }
         }
     }

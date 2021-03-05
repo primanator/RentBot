@@ -25,13 +25,9 @@ namespace RentBot.Commands
 
         public abstract Task ExecuteAsync(TelegramRequest request);
 
-        protected async Task FallbackAsync(long chatId, string text, string callbackMessage)
+        protected async Task FallbackAsync(long chatId, string text, InlineKeyboardMarkup keyboardMarkup)
         {
-            await BotClient.SendTextMessageAsync(chatId, text,
-                replyMarkup: new InlineKeyboardMarkup(new[]
-                {
-                    new [] { InlineKeyboardButton.WithCallbackData(callbackMessage, Messages.FallBack) }
-                }));
+            await BotClient.SendTextMessageAsync(chatId, text, replyMarkup: keyboardMarkup);
         }
     }
 }

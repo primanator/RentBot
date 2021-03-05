@@ -27,6 +27,11 @@ namespace RentBot.Commands
 
         public override async Task ExecuteAsync(TelegramRequest request)
         {
+            if (!string.IsNullOrEmpty(request.CallbackQueryId))
+            {
+                await BotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+            }
+
             await BotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
 
             var response = GetResponse(request);
