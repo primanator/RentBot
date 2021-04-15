@@ -24,7 +24,8 @@ namespace RentBot.Services.Implementation
             {
                 _defaultCommand,
                 new PathCommand(clientFactory, logger),
-                new PlacesCommand(clientFactory, logger)
+                new PlacesCommand(clientFactory, logger),
+                new MiscCommand(clientFactory, logger)
             };
         }
 

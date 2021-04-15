@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 
 namespace RentBot.Factories
 {
@@ -28,6 +30,7 @@ namespace RentBot.Factories
             {
                 var botSecret = Environment.GetEnvironmentVariable("BOT_SECRET", EnvironmentVariableTarget.Process);
                 _telegramBotClient = new TelegramBotClient(botSecret);
+                _telegramBotClient.SetMyCommandsAsync(new List<BotCommand> { new BotCommand { Command = "/start", Description = "To begin conversation" } });
             }
             return _telegramBotClient;
         }

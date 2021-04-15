@@ -15,5 +15,7 @@
         public const string HomeGeo = "home_geo";
         public const string ToCity = "to_city";
         public const string FromCity = "from_city";
+        public const string FAQ = "faq";
+        public const string About = "about";
     }
 }

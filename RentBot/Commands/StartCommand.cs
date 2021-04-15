@@ -40,7 +40,9 @@ namespace RentBot.Commands
                 {
                     new [] { InlineKeyboardButton.WithCallbackData($"Maps {Emojis.Map}", Messages.Path) },
                     new [] { InlineKeyboardButton.WithCallbackData($"What's around? {Emojis.Eyes}", Messages.Places) },
-                    new [] { InlineKeyboardButton.WithUrl($"Booking {Emojis.HouseWithGarden}", "https://abnb.me/Y5SjYolOneb") }
+                    new [] { InlineKeyboardButton.WithUrl($"Booking {Emojis.HouseWithGarden}", "https://abnb.me/Y5SjYolOneb") },
+                    new [] { InlineKeyboardButton.WithCallbackData($"About us {Emojis.SpeechBalloon}", Messages.About) },
+                    new [] { InlineKeyboardButton.WithCallbackData($"F.A.Q. {Emojis.PageWithCurl}", Messages.FAQ) }
                 }));
         }
 

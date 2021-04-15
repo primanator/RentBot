@@ -13,8 +13,10 @@
         public const string LeftPointing = "\U0001F448";
         public const string RightPointing = "\U0001F449";
         public const string OkSign = "\U0001F44C";
-        public const string WavingHand = "\U0001F44B";
+        public const string SpeechBalloon = "\U0001F44B";
         public const string HeartEyes = "\U0001F60D";
         public const string HouseWithGarden = "\U0001F3E1";
+        public const string DeliciousFace = "\U0001F60B";
+        public const string PageWithCurl = "\U0001F4C3";
     }
 }
