@@ -18,7 +18,10 @@ namespace RentBot.Commands
             AvailableMessages = new List<string>
             {
                 Messages.About,
-                Messages.FAQ
+                Messages.FAQ,
+                Messages.SupermarketLocation,
+                Messages.MinimarketLocation,
+                Messages.TakeoutLocation
             };
         }
 
@@ -26,6 +29,7 @@ namespace RentBot.Commands
         {
             await BotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
             var fallbackNeeded = false;
+            var foodFallback = false;
             string responseMessage;
 
             switch (request.Message)
@@ -52,6 +56,39 @@ namespace RentBot.Commands
                         fallbackNeeded = true;
                         break;
                     }
+                case Messages.SupermarketLocation:
+                    {
+                        await BotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+                        await BotClient.SendTextMessageAsync(request.ChatId, "Supermarket is just near by!");
+
+                        await BotClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
+                        await BotClient.SendLocationAsync(request.ChatId, 50.6030410f, 30.7044328f);
+                        fallbackNeeded = true;
+                        foodFallback = true;
+                        break;
+                    }
+                case Messages.MinimarketLocation:
+                    {
+                        await BotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+                        await BotClient.SendTextMessageAsync(request.ChatId, "Minimarket is just near by!");
+
+                        await BotClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
+                        await BotClient.SendLocationAsync(request.ChatId, 50.6632402f, 30.7309756f);
+                        fallbackNeeded = true;
+                        foodFallback = true;
+                        break;
+                    }
+                case Messages.TakeoutLocation:
+                    {
+                        await BotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+                        await BotClient.SendTextMessageAsync(request.ChatId, "Takeout is just near by!");
+
+                        await BotClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
+                        await BotClient.SendLocationAsync(request.ChatId, 50.6781993f, 30.7388073f);
+                        fallbackNeeded = true;
+                        foodFallback = true;
+                        break;
+                    }
                 default:
                     {
                         break;
@@ -60,6 +97,15 @@ namespace RentBot.Commands
 
             if (fallbackNeeded)
             {
+                if (foodFallback)
+                {
+                    await FallbackAsync(request.ChatId, "Looks nice?", new InlineKeyboardMarkup(new[]
+                    {
+                        new [] { InlineKeyboardButton.WithCallbackData($"Yeap! {Emojis.HeartEyes}", Messages.FallBack) }
+                    }));
+                    return;
+                }
+
                 await FallbackAsync(request.ChatId, "Check other options?", new InlineKeyboardMarkup(new[]
                 {
                     new [] { InlineKeyboardButton.WithCallbackData($"Yeah! {Emojis.OkSign}", Messages.FallBack) }

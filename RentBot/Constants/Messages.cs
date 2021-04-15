@@ -17,5 +17,11 @@
         public const string FromCity = "from_city";
         public const string FAQ = "faq";
         public const string About = "about";
+        public const string Minimarket = "minimarket";
+        public const string Supermarket = "supermarket";
+        public const string Takeout = "takeout";
+        public const string MinimarketLocation = "minimarket_location";
+        public const string SupermarketLocation = "supermarket_location";
+        public const string TakeoutLocation = "takeout_location";
     }
 }

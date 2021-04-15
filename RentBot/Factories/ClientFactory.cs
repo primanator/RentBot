@@ -30,7 +30,7 @@ namespace RentBot.Factories
             {
                 var botSecret = Environment.GetEnvironmentVariable("BOT_SECRET", EnvironmentVariableTarget.Process);
                 _telegramBotClient = new TelegramBotClient(botSecret);
-                _telegramBotClient.SetMyCommandsAsync(new List<BotCommand> { new BotCommand { Command = "/start", Description = "To begin conversation" } });
+                _telegramBotClient.SetMyCommandsAsync(new List<BotCommand> { new BotCommand { Command = "/start", Description = "to begin conversation" } });
             }
             return _telegramBotClient;
         }

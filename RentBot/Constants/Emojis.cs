@@ -18,5 +18,8 @@
         public const string HouseWithGarden = "\U0001F3E1";
         public const string DeliciousFace = "\U0001F60B";
         public const string PageWithCurl = "\U0001F4C3";
+        public const string Pizza = "\U0001F355";
+        public const string Store = "\U0001F3EA";
+        public const string PotOfFood = "\U0001F372";
     }
 }

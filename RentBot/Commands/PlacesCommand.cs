@@ -26,7 +26,10 @@ namespace RentBot.Commands
                 Messages.Home,
                 Messages.Field,
                 Messages.River,
-                Messages.Forest
+                Messages.Forest,
+                Messages.Minimarket,
+                Messages.Supermarket,
+                Messages.Takeout
             };
         }
 
@@ -43,15 +46,52 @@ namespace RentBot.Commands
                         new [] { InlineKeyboardButton.WithCallbackData($"Home {Emojis.House}", Messages.Home) },
                         new [] { InlineKeyboardButton.WithCallbackData($"River {Emojis.WaterWave}", Messages.River) }, 
                         new [] { InlineKeyboardButton.WithCallbackData($"Forest {Emojis.Tree}", Messages.Forest) },
-                        new [] { InlineKeyboardButton.WithCallbackData($"Field {Emojis.EarOfRice}", Messages.Field) }
+                        new [] { InlineKeyboardButton.WithCallbackData($"Field {Emojis.EarOfRice}", Messages.Field) },
+                        new [] { InlineKeyboardButton.WithCallbackData($"Supermarket {Emojis.Store}", Messages.Supermarket) },
+                        new [] { InlineKeyboardButton.WithCallbackData($"Minimarket {Emojis.PotOfFood}", Messages.Minimarket) },
+                        new [] { InlineKeyboardButton.WithCallbackData($"Takeout {Emojis.Pizza}", Messages.Takeout) }
                     }));
                 return;
             }
 
-            //update.CallbackQuery.Message.From.LanguageCode
-
             await BotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
             await BotClient.SendMediaGroupAsync(await GetMediaFromBlobByPrefix(request.Message), request.ChatId);
+
+            if (request.Message.Equals(Messages.Minimarket, System.StringComparison.InvariantCultureIgnoreCase)
+                || request.Message.Equals(Messages.Supermarket, System.StringComparison.InvariantCultureIgnoreCase)
+                || request.Message.Equals(Messages.Takeout, System.StringComparison.InvariantCultureIgnoreCase))
+            {
+                var callbackCommand = string.Empty;
+
+                switch (request.Message)
+                {
+                    case Messages.Minimarket:
+                        {
+                            callbackCommand = Messages.MinimarketLocation;
+                            break;
+                        }
+                    case Messages.Supermarket:
+                        {
+                            callbackCommand = Messages.SupermarketLocation;
+                            break;
+                        }
+                    case Messages.Takeout:
+                        {
+                            callbackCommand = Messages.TakeoutLocation;
+                            break;
+                        }
+                    default:
+                        {
+                            break;
+                        }
+                }
+
+                await FallbackAsync(request.ChatId, "See location?", new InlineKeyboardMarkup(new[]
+                {
+                    new [] { InlineKeyboardButton.WithCallbackData($"Yes! {Emojis.DeliciousFace}", callbackCommand) }
+                }));
+                return;
+            }
 
             await FallbackAsync(request.ChatId, "Looks nice?", new InlineKeyboardMarkup(new []
                 {
