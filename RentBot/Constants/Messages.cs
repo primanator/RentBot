@@ -23,5 +23,6 @@
         public const string MinimarketLocation = "minimarket_location";
         public const string SupermarketLocation = "supermarket_location";
         public const string TakeoutLocation = "takeout_location";
+        public const string Food = "food";
     }
 }

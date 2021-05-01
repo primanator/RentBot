@@ -1,11 +1,12 @@
-﻿using Azure.Storage.Blobs;
+﻿using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using Telegram.Bot;
 
 namespace RentBot.Factories
 {
     public interface IClientFactory
     {
-        ITelegramBotClient GetTelegramBotClient();
+        Task<ITelegramBotClient> GetTelegramBotClient();
         BlobContainerClient GetBlobContainerClient();
     }
 }

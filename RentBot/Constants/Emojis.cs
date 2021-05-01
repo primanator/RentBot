@@ -21,5 +21,6 @@
         public const string Pizza = "\U0001F355";
         public const string Store = "\U0001F3EA";
         public const string PotOfFood = "\U0001F372";
+        public const string FrenchFries = "\U0001F35F";
     }
 }

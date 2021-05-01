@@ -21,7 +21,7 @@ namespace RentBot
                 var requestStr = await req.ReadAsStringAsync();
                 log.LogInformation("RequestStr: " + requestStr);
                 var request = new TelegramRequest(JsonConvert.DeserializeObject<Update>(requestStr));
-                await new BotService(new ClientFactory(), log).ProcessAsync(request);
+                await new BotService(new ClientFactory(), new CommandService(), log).ProcessAsync(request);
             }
             catch(Exception ex)
             {

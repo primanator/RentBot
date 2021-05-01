@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -24,13 +26,20 @@ namespace RentBot.Factories
             return _blobContainerClient;
         }
 
-        public ITelegramBotClient GetTelegramBotClient()
+        public async Task<ITelegramBotClient> GetTelegramBotClient()
         {
             if (_telegramBotClient == null)
             {
                 var botSecret = Environment.GetEnvironmentVariable("BOT_SECRET", EnvironmentVariableTarget.Process);
                 _telegramBotClient = new TelegramBotClient(botSecret);
-                _telegramBotClient.SetMyCommandsAsync(new List<BotCommand> { new BotCommand { Command = "/start", Description = "to begin conversation" } });
+
+                var startCommand = new BotCommand { Command = "/start", Description = "to begin conversation" };
+                var commands = await _telegramBotClient.GetMyCommandsAsync();
+
+                if (!commands.Any(existingCommand => existingCommand.Command == startCommand.Command.Remove(0,1))) // commands are saved without '/'symbol on server
+                {
+                    await _telegramBotClient.SetMyCommandsAsync(new List<BotCommand> { startCommand });
+                }
             }
             return _telegramBotClient;
         }
