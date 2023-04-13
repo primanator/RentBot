@@ -15,7 +15,7 @@ To get started with the project, follow these steps:
 
 1. Clone the repository `git clone https://github.com/primanator/RentBot.git`
 
-2. Create a new Telegram bot by talking to the [BotFather](https://core.telegram.org/bots#botfather) and receive the bot HTTP API token.
+2. Create a new Telegram bot by talking to the [BotFather](https://core.telegram.org/bots#how-do-i-create-a-bot) and receive the bot HTTP API token.
 
 3. Set up your Azure Function and Azure Blob Storage accounts. For local testing of the function, add the `"AzureWebJobsStorage"` value to the `local.settings.json` project file.
 
