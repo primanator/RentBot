@@ -17,9 +17,9 @@ To get started with the project, follow these steps:
 
 2. Create a new Telegram bot by talking to the [BotFather](https://core.telegram.org/bots#how-do-i-create-a-bot) and receive the bot HTTP API token.
 
-3. Set up your Azure Function and Azure Blob Storage accounts. For local testing of the function, add the `"AzureWebJobsStorage"` value to the `local.settings.json` project file.
+3. Set up your Azure Function and Azure Blob Storage accounts. For local testing of the Function, add the `"AzureWebJobsStorage"` value to the `local.settings.json` project file.
 
-4. Set the Azure Function authorizationLevel level to `function` and trigger to `POST` message.
+4. Set the Azure Function `authorizationLevel` to `function` and trigger to `POST` message.
 
 5. Publish your Azure Function to the cloud.
 
@@ -38,7 +38,7 @@ For more information on the Telegram webhook setup, refer to the [Telegram API d
 
 ## 💼 Features
 
-- 🔎 Search for Airbnb property by location and see what`s around.
+- 🔎 Search for Airbnb property by location and see what's around.
 - 📷 View property photos and details.
 - 🗓️ Check availability and book a property via Airbnb link.
 - 💬 Communicate with property owners through the dedicated Telegram channel.
