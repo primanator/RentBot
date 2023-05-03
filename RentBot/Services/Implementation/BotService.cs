@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RentBot.Factories;
 using RentBot.Model;
 using RentBot.Services.Interfaces;
 
+[assembly: InternalsVisibleTo("RentBot.Tests")]
 namespace RentBot.Services.Implementation
 {
     internal class BotService : IBotService
