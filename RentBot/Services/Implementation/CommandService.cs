@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using RentBot.Commands;
+using RentBot.Commands.Interfaces;
 using RentBot.Constants;
 using RentBot.Factories;
 using RentBot.Model;
@@ -15,26 +16,26 @@ namespace RentBot.Services.Implementation
 {
     public class CommandService : ICommandService
     {
-        private readonly LinkedCommand _rootCommand;
-        private readonly LinkedCommand _defaultCommand;
+        private readonly ILinkedCommand _rootCommand;
+        private readonly ILinkedCommand _defaultCommand;
 
         public CommandService()
         {
             _defaultCommand = new LinkedCommand(Messages.Default, StartFunc);
             _rootCommand = new LinkedCommand(string.Empty)
             {
-                ChildCommands = new List<LinkedCommand>
+                ChildCommands = new List<ILinkedCommand>
                 {
                     new LinkedCommand(Messages.FallBack, StartFunc),
                     new LinkedCommand(Messages.Start, StartFunc)
                     {
-                        ChildCommands = new List<LinkedCommand>
+                        ChildCommands = new List<ILinkedCommand>
                         {
                             new LinkedCommand(Messages.About, AboutFunc, OtherOptionsFallback),
                             new LinkedCommand(Messages.FAQ, FaqFunc, OtherOptionsFallback),
                             new LinkedCommand(Messages.Places, PlacesFunc)
                             {
-                                ChildCommands = new List<LinkedCommand>
+                                ChildCommands = new List<ILinkedCommand>
                                 {
                                     new LinkedCommand(Messages.Home, BlobPhotoFunc, PlaceFallback),
                                     new LinkedCommand(Messages.Field, BlobPhotoFunc, PlaceFallback),
@@ -42,19 +43,19 @@ namespace RentBot.Services.Implementation
                                     new LinkedCommand(Messages.Forest, BlobPhotoFunc, PlaceFallback),
                                     new LinkedCommand(Messages.Food, FoodFunc)
                                     {
-                                        ChildCommands = new List<LinkedCommand>
+                                        ChildCommands = new List<ILinkedCommand>
                                         {
                                             new LinkedCommand(Messages.Minimarket, BlobPhotoFunc, FoodFallback)
                                             {
-                                                ChildCommands = new List<LinkedCommand> { new LinkedCommand(Messages.MinimarketLocation, MinimarketLocationFunc, PlaceFallback) }
+                                                ChildCommands = new List<ILinkedCommand> { new LinkedCommand(Messages.MinimarketLocation, MinimarketLocationFunc, PlaceFallback) }
                                             },
                                             new LinkedCommand(Messages.Supermarket, BlobPhotoFunc, FoodFallback)
                                             {
-                                                ChildCommands = new List<LinkedCommand> { new LinkedCommand(Messages.SupermarketLocation, SupermarketLocationFunc, PlaceFallback) }
+                                                ChildCommands = new List<ILinkedCommand> { new LinkedCommand(Messages.SupermarketLocation, SupermarketLocationFunc, PlaceFallback) }
                                             },
                                             new LinkedCommand(Messages.Takeout, BlobPhotoFunc, FoodFallback)
                                             {
-                                                ChildCommands = new List<LinkedCommand> { new LinkedCommand(Messages.TakeoutLocation, TakeoutLocationFunc, PlaceFallback) }
+                                                ChildCommands = new List<ILinkedCommand> { new LinkedCommand(Messages.TakeoutLocation, TakeoutLocationFunc, PlaceFallback) }
                                             }
                                         }
                                     }
@@ -62,11 +63,11 @@ namespace RentBot.Services.Implementation
                             },
                             new LinkedCommand(Messages.Path, PathFunc)
                             {
-                                ChildCommands = new List<LinkedCommand>
+                                ChildCommands = new List<ILinkedCommand>
                                 {
                                     new LinkedCommand(Messages.BusSchedule, BusScheduleFunc)
                                     {
-                                        ChildCommands = new List<LinkedCommand>
+                                        ChildCommands = new List<ILinkedCommand>
                                         {
                                             new LinkedCommand(Messages.ToCity, ToCityFunc, RouteFallback),
                                             new LinkedCommand(Messages.FromCity, FromCityFunc, RouteFallback)
@@ -81,9 +82,9 @@ namespace RentBot.Services.Implementation
             };
         }
 
-        public LinkedCommand GetCommandByMessage(string message)
+        public ILinkedCommand GetCommandByMessage(string message)
         {
-            var children = new Queue<LinkedCommand>();
+            var children = new Queue<ILinkedCommand>();
             children.Enqueue(_rootCommand);
 
             while(children.Count != 0)

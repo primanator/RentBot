@@ -1,9 +1,9 @@
-﻿using RentBot.Commands;
+﻿using RentBot.Commands.Interfaces;
 
 namespace RentBot.Services.Interfaces
 {
     public interface ICommandService
     {   
-        LinkedCommand GetCommandByMessage(string message);
+        ILinkedCommand GetCommandByMessage(string message);
     }
 }
