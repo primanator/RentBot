@@ -1,195 +1,176 @@
-//using System.Threading.Tasks;
-//using Moq;
-//using NUnit.Framework;
-//using RentBot.Factories;
-//using RentBot.Model;
-//using RentBot.Services.Interfaces;
-//using RentBot.Services.Implementation;
-//using Microsoft.Extensions.Logging;
-//using Telegram.Bot.Types;
-//using RentBot.Commands;
-//using RentBot.Constants;
-//using System;
-//using Telegram.Bot.Types.Enums;
-//using System.Collections.Generic;
+using System.Threading.Tasks;
+using Moq;
+using NUnit.Framework;
+using RentBot.Services.Interfaces;
+using RentBot.Services.Implementation;
+using Microsoft.Extensions.Logging;
+using Telegram.Bot.Types;
+using System;
+using RentBot.Model;
+using Telegram.Bot.Types.Enums;
+using System.Collections.Generic;
+using RentBot.Commands;
+using RentBot.Constants;
 
-//namespace RentBot.Tests.Services
-//{
-//    [TestFixture]
-//    public class BotServiceTests
-//    {
-//        private Mock<IClientFactory> _clientFactoryMock;
-//        private Mock<ICommandService> _commandServiceMock;
-//        private Mock<ILogger> _loggerMock;
-//        private Mock<Func<IClientFactory, TelegramRequest, Task>> _functionMock;
-//        private BotService _botService;
-//        private Update _updatePayload;
+namespace RentBot.Tests.Services;
 
-//        [SetUp]
-//        public void SetUp()
-//        {
-//            _clientFactoryMock = new Mock<IClientFactory>();
-//            _commandServiceMock = new Mock<ICommandService>();
-//            _loggerMock = new Mock<ILogger>();
-//            _functionMock = new Mock<Func<IClientFactory, TelegramRequest, Task>>();
-//            _botService = new BotService(_clientFactoryMock.Object, _commandServiceMock.Object, _loggerMock.Object);
-//            _updatePayload = GenerateUpdatePayload();
-//        }
+[TestFixture]
+public class BotServiceTests
+{
+    private Mock<ICommandService> _commandServiceMock;
+    private Mock<ILogger<BotService>> _loggerMock;
+    private Mock<Func<Request, Task>> _functionMock;
+    private Mock<Func<Request, Task>> _fallbackMock;
+    private BotService _botService;
+    private Update _updatePayload;
 
-//        [TearDown]
-//        public void TearDown()
-//        {
-//            _clientFactoryMock = null;
-//            _commandServiceMock = null;
-//            _loggerMock = null;
-//            _functionMock = null;
-//            _botService = null;
-//            _updatePayload = null;
-//        }
+    [SetUp]
+    public void SetUp()
+    {
+        _commandServiceMock = new Mock<ICommandService>();
+        _loggerMock = new Mock<ILogger<BotService>>();
+        _functionMock = new Mock<Func<Request, Task>>();
+        _fallbackMock = new Mock<Func<Request, Task>>();
+        _botService = new BotService(_commandServiceMock.Object, _loggerMock.Object);
+        _updatePayload = GenerateUpdatePayload();
+    }
 
-//        [Test]
-//        public async Task ProcessAsync_WhenCalled_ShouldCallCommandServiceGetCommandByMessage()
-//        {
-//            var request = new TelegramRequest(_updatePayload);
-//            _commandServiceMock
-//                .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
-//                .Returns(new LinkedCommand(Messages.Start));
+    [TearDown]
+    public void TearDown()
+    {
+        _commandServiceMock = null;
+        _loggerMock = null;
+        _functionMock = null;
+        _fallbackMock = null;
+        _botService = null;
+        _updatePayload = null;
+    }
 
-//            await _botService.ProcessAsync(request);
-            
-//            _commandServiceMock.Verify(commandService => commandService.GetCommandByMessage(It.IsAny<string>()), Times.Once);
-//        }
+    [Test]
+    public async Task ProcessAsync_CallsGetCommandByMessage_ByDefault()
+    {
+        var request = new Request(_updatePayload);
+        _commandServiceMock
+            .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
+            .ReturnsAsync(new LinkedCommand(Messages.Start));
 
-//        [Test]
-//        public async Task ProcessAsync_WhenCalled_ShouldCallCommandServiceGetCommandByMessageWithCorrectMessage()
-//        {
-//            var request = new TelegramRequest(_updatePayload);
-//            _commandServiceMock
-//                .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
-//                .Returns(new LinkedCommand(Messages.Start));
+        await _botService.ProcessAsync(request);
 
-//            await _botService.ProcessAsync(request);
-            
-//            _commandServiceMock.Verify(commandService => commandService.GetCommandByMessage(Messages.Start), Times.Once);
-//        }
+        _commandServiceMock.Verify(commnadService => commnadService.GetCommandByMessage(It.IsAny<string>()), Times.Once);
+    }
 
-//        [Test]
-//        public async Task ProcessAsync_WhenCalled_ShouldCallFunctionReturnedFromGetCommandMessageOfCommandService()
-//        {
-//            var request = new TelegramRequest(_updatePayload);
-//            var command = new LinkedCommand(Messages.Start, _functionMock.Object);
-//            _commandServiceMock
-//                .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
-//                .Returns(command);
+    [Test]
+    public async Task ProcessAsync_CallsCommandFunction_ByDefault()
+    {
+        var request = new Request(_updatePayload);
+        _commandServiceMock
+            .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
+            .ReturnsAsync(new LinkedCommand(Messages.Start, _functionMock.Object, _fallbackMock.Object));
 
-//            await _botService.ProcessAsync(request);
+        await _botService.ProcessAsync(request);
 
-//            _functionMock.Verify(function => function.Invoke(It.IsAny<IClientFactory>(), It.IsAny<TelegramRequest>()), Times.Once);
-//        }
+        _functionMock.Verify(function => function(It.IsAny<Request>()), Times.Once);
+    }
 
-//        [Test]
-//        public async Task ProcessAsync_WhenCalled_ShouldCallFallbackReturnedFromGetCommandMessageOfCommandService()
-//        {
-//            var request = new TelegramRequest(_updatePayload);
-//            var command = new LinkedCommand(Messages.Start, _functionMock.Object, _functionMock.Object);
-//            _commandServiceMock
-//                .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
-//                .Returns(command);
+    [Test]
+    public async Task ProcessAsync_CallsCommandFallback_ByDefault()
+    {
+        var request = new Request(_updatePayload);
+        _commandServiceMock
+            .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
+            .ReturnsAsync(new LinkedCommand(Messages.Start, _functionMock.Object, _fallbackMock.Object));
 
-//            await _botService.ProcessAsync(request);
+        await _botService.ProcessAsync(request);
 
-//            _functionMock.Verify(function => function.Invoke(It.IsAny<IClientFactory>(), It.IsAny<TelegramRequest>()), Times.Exactly(2));
-//        }
+        _fallbackMock.Verify(function => function(It.IsAny<Request>()), Times.Once);
+    }
 
-//        [Test]
-//        public async Task ProcessAsync_WhenCommandServiceThrows_ShouldCallLogger()
-//        {
-//            var request = new TelegramRequest(_updatePayload);
-//            _commandServiceMock
-//                .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
-//                .Throws(new Exception());
-//            _loggerMock
-//                .Setup(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
+    [Test]
+    public async Task ProcessAsync_CallsLogger_WhenCommandServiceThrows()
+    {
+        var request = new Request(_updatePayload);
+        _commandServiceMock
+            .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
+            .ThrowsAsync(new Exception());
+        _loggerMock
+            .Setup(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
 
-//            await _botService.ProcessAsync(request);
+        await _botService.ProcessAsync(request);
 
-//            _loggerMock
-//                .Verify(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.AtLeastOnce);
-//        }
+        _loggerMock
+            .Verify(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.AtLeastOnce);
+    }
 
-//        [Test]
-//        public async Task ProcessAsync_WhenFunctionThrows_ShouldCallLogger()
-//        {
-//            var request = new TelegramRequest(_updatePayload);
-//            var command = new LinkedCommand(Messages.Start, _functionMock.Object);
-//            _commandServiceMock
-//                .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
-//                .Returns(command);
-//            _functionMock
-//                .Setup(function => function.Invoke(It.IsAny<IClientFactory>(), It.IsAny<TelegramRequest>()))
-//                .Throws(new Exception());
-//            _loggerMock
-//                .Setup(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
+    [Test]
+    public async Task ProcessAsync_CallsLogger_WhenFunctionThrows()
+    {
+        var request = new Request(_updatePayload);
+        _commandServiceMock
+            .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
+            .ReturnsAsync(new LinkedCommand(Messages.Start, _functionMock.Object, _fallbackMock.Object));
+        _functionMock
+            .Setup(function => function(It.IsAny<Request>()))
+            .ThrowsAsync(new Exception());
+        _loggerMock
+            .Setup(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
+        
+        await _botService.ProcessAsync(request);
 
-//            await _botService.ProcessAsync(request);
+        _loggerMock
+            .Verify(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.AtLeastOnce);
+    }
 
-//            _loggerMock
-//                .Verify(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.AtLeastOnce);
-//        }
+    [Test]
+    public async Task Process_Async_CallsLogger_WhenFallbackThrows()
+    {
+        var request = new Request(_updatePayload);
+        _commandServiceMock
+            .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
+            .ReturnsAsync(new LinkedCommand(Messages.Start, _functionMock.Object, _fallbackMock.Object));
+        _functionMock
+            .Setup(function => function(It.IsAny<Request>()))
+            .ThrowsAsync(new Exception());
+        _loggerMock
+            .Setup(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
+        
+        await _botService.ProcessAsync(request);
 
-//        [Test]
-//        public async Task ProcessAsync_WhenFallbackThrows_ShouldCallLogger()
-//        {
-//            var request = new TelegramRequest(_updatePayload);
-//            var command = new LinkedCommand(Messages.Start, _functionMock.Object, _functionMock.Object);
-//            _commandServiceMock
-//                .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
-//                .Returns(command);
-//            _functionMock
-//                .Setup(function => function.Invoke(It.IsAny<IClientFactory>(), It.IsAny<TelegramRequest>()))
-//                .Throws(new Exception());
-//            _loggerMock
-//                .Setup(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
+        _loggerMock
+            .Verify(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.AtLeastOnce);
+    }
 
-//            await _botService.ProcessAsync(request);
-
-//            _loggerMock
-//                .Verify(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.AtLeastOnce);
-//        }
-
-//        private Update GenerateUpdatePayload() => new Update
-//        {
-//            Id = 121212122,
-//            Message = new Message
-//            {
-//                MessageId = 2123,
-//                From = new User
-//                {
-//                    Id = 552374586,
-//                    IsBot = false,
-//                    FirstName = "firstname",
-//                    Username = "username",
-//                    LanguageCode = "en"
-//                },
-//                Chat = new Chat
-//                {
-//                    Id = 552374586,
-//                    FirstName = "firstname",
-//                    Username = "username",
-//                    Type = ChatType.Private
-//                },
-//                Date = new DateTime(3254851313),
-//                Text = "/start",
-//                Entities = new List<MessageEntity>
-//                    {
-//                        new MessageEntity
-//                        {
-//                            Offset = 0,
-//                            Length = 6,
-//                            Type = MessageEntityType.BotCommand
-//                        }
-//                    }.ToArray()
-//            }
-//        };
-//    }
-//}
+    private static Update GenerateUpdatePayload() => new()
+    {
+        Id = 121212122,
+        Message = new Message
+        {
+            MessageId = 2123,
+            From = new User
+            {
+                Id = 552374586,
+                IsBot = false,
+                FirstName = "firstname",
+                Username = "username",
+                LanguageCode = "en"
+            },
+            Chat = new Chat
+            {
+                Id = 552374586,
+                FirstName = "firstname",
+                Username = "username",
+                Type = ChatType.Private
+            },
+            Date = new DateTime(3254851313),
+            Text = "/start",
+            Entities = new List<MessageEntity>
+            {
+                new MessageEntity
+                            {
+                                Offset = 0,
+                                Length = 6,
+                                Type = MessageEntityType.BotCommand
+                            }
+                        }.ToArray()
+        }
+    };
+}
