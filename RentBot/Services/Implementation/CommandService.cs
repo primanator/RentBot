@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using RentBot.Clients.Interfaces;
 using RentBot.Commands;
 using RentBot.Commands.Interfaces;
 using RentBot.Constants;
@@ -18,23 +19,11 @@ public class CommandService : ICommandService
 {
     private readonly ITelegramBotClient _telegramBotClient;
     private readonly IBlobServiceClientWrapper _blobServiceClientWrapper;
-    private ILinkedCommand _rootCommand;
-
-    private ILinkedCommand RootCommand
-    {
-        get
-        {
-            if (_rootCommand == default)
-                _rootCommand = GetRootCommand();
-            return _rootCommand;
-        }
-    }
 
     public CommandService(ITelegramBotClient telegramBotClient, IBlobServiceClientWrapper blobServiceClientWrapper)
     {
         _telegramBotClient = telegramBotClient;
         _blobServiceClientWrapper = blobServiceClientWrapper;
-        _rootCommand = GetRootCommand();
     }
 
     public async Task<ILinkedCommand> GetCommandByMessage(string message)
@@ -42,7 +31,7 @@ public class CommandService : ICommandService
         await ConfigureTelegramBotClientCommands();
 
         var children = new Queue<ILinkedCommand>();
-        children.Enqueue(RootCommand);
+        children.Enqueue(GetRootCommand());
 
         while (children.Count != 0)
         {

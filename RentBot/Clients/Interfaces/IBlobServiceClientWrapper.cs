@@ -1,6 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 
-namespace RentBot.Services.Interfaces;
+namespace RentBot.Clients.Interfaces;
 
 public interface IBlobServiceClientWrapper
 {
