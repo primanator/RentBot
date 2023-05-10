@@ -2,38 +2,34 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using RentBot.Factories;
 using RentBot.Model;
 using RentBot.Services.Interfaces;
 
 [assembly: InternalsVisibleTo("RentBot.Tests")]
-namespace RentBot.Services.Implementation
+namespace RentBot.Services.Implementation;
+
+public class BotService : IBotService
 {
-    internal class BotService : IBotService
+    private readonly ICommandService _commandService;
+    private readonly ILogger<BotService> _logger;
+
+    public BotService(ICommandService commandService, ILogger<BotService> logger)
     {
-        private readonly IClientFactory _clientFactory;
-        private readonly ICommandService _commandService;
-        private readonly ILogger _logger;
+        _commandService = commandService;
+        _logger = logger;
+    }
 
-        public BotService(IClientFactory clientFactory, ICommandService commandService, ILogger logger)
+    public async Task ProcessAsync(Request request)
+    {
+        try
         {
-            _clientFactory = clientFactory;
-            _commandService = commandService;
-            _logger = logger;
+            var command = await _commandService.GetCommandByMessage(request.Message);
+            await command.Function(request);
+            await command.Fallback(request);
         }
-
-        public async Task ProcessAsync(TelegramRequest request)
+        catch (Exception ex)
         {
-            try
-            {
-                var command = _commandService.GetCommandByMessage(request.Message);
-                await command.Function(_clientFactory, request);
-                await command.Fallback(_clientFactory, request);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"{nameof(BotService)} encountered error: {ex.Message}\n StackTrace: {ex.StackTrace}");
-            }
+            _logger.LogError($"{nameof(BotService)} encountered error: {ex.Message}\n StackTrace: {ex.StackTrace}");
         }
     }
 }

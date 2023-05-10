@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 using RentBot.Model;
 
-namespace RentBot.Services.Interfaces
+namespace RentBot.Services.Interfaces;
+
+public interface IBotService
 {
-    public interface IBotService
-    {
-        Task ProcessAsync(TelegramRequest request);
-    }
+    Task ProcessAsync(Request request);
 }

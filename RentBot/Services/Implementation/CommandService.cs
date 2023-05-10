@@ -1,396 +1,395 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Azure.Storage.Blobs;
 using RentBot.Commands;
 using RentBot.Commands.Interfaces;
 using RentBot.Constants;
-using RentBot.Factories;
 using RentBot.Model;
 using RentBot.Services.Interfaces;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace RentBot.Services.Implementation
-{
-    public class CommandService : ICommandService
-    {
-        private readonly ILinkedCommand _rootCommand;
-        private readonly ILinkedCommand _defaultCommand;
+namespace RentBot.Services.Implementation;
 
-        public CommandService()
+public class CommandService : ICommandService
+{
+    private readonly ITelegramBotClient _telegramBotClient;
+    private readonly IBlobServiceClientWrapper _blobServiceClientWrapper;
+    private ILinkedCommand _rootCommand;
+
+    private ILinkedCommand RootCommand
+    {
+        get
         {
-            _defaultCommand = new LinkedCommand(Messages.Default, StartFunc);
-            _rootCommand = new LinkedCommand(string.Empty)
+            if (_rootCommand == default)
+                _rootCommand = GetRootCommand();
+            return _rootCommand;
+        }
+    }
+
+    public CommandService(ITelegramBotClient telegramBotClient, IBlobServiceClientWrapper blobServiceClientWrapper)
+    {
+        _telegramBotClient = telegramBotClient;
+        _blobServiceClientWrapper = blobServiceClientWrapper;
+        _rootCommand = GetRootCommand();
+    }
+
+    public async Task<ILinkedCommand> GetCommandByMessage(string message)
+    {
+        await ConfigureTelegramBotClientCommands();
+
+        var children = new Queue<ILinkedCommand>();
+        children.Enqueue(RootCommand);
+
+        while (children.Count != 0)
+        {
+            var node = children.Dequeue();
+
+            if (node.CommandMessage.Equals(message, StringComparison.InvariantCultureIgnoreCase))
             {
-                ChildCommands = new List<ILinkedCommand>
+                return node;
+            }
+            node.ChildCommands.ForEach(childNode => children.Enqueue(childNode));
+        }
+        return new LinkedCommand(Messages.Default, StartFunc);
+    }
+
+    private async Task ConfigureTelegramBotClientCommands()
+    {
+        var startCommand = new BotCommand { Command = "/start", Description = "to begin conversation" };
+        var commands = await _telegramBotClient.GetMyCommandsAsync();
+
+        if (!commands.Any(existingCommand => existingCommand.Command == startCommand.Command.Remove(0, 1))) // commands are saved without '/'symbol on server
+        {
+            await _telegramBotClient.SetMyCommandsAsync(new List<BotCommand> { startCommand });
+        }
+    }
+
+    private ILinkedCommand GetRootCommand() =>
+        new LinkedCommand(string.Empty)
+        {
+            ChildCommands = new List<ILinkedCommand>
+            {
+                new LinkedCommand(Messages.FallBack, StartFunc),
+                new LinkedCommand(Messages.Start, StartFunc)
                 {
-                    new LinkedCommand(Messages.FallBack, StartFunc),
-                    new LinkedCommand(Messages.Start, StartFunc)
+                    ChildCommands = new List<ILinkedCommand>
                     {
-                        ChildCommands = new List<ILinkedCommand>
+                        new LinkedCommand(Messages.About, AboutFunc, OtherOptionsFallback),
+                        new LinkedCommand(Messages.FAQ, FaqFunc, OtherOptionsFallback),
+                        new LinkedCommand(Messages.Places, PlacesFunc)
                         {
-                            new LinkedCommand(Messages.About, AboutFunc, OtherOptionsFallback),
-                            new LinkedCommand(Messages.FAQ, FaqFunc, OtherOptionsFallback),
-                            new LinkedCommand(Messages.Places, PlacesFunc)
+                            ChildCommands = new List<ILinkedCommand>
                             {
-                                ChildCommands = new List<ILinkedCommand>
+                                new LinkedCommand(Messages.Home, BlobPhotoFunc, PlaceFallback),
+                                new LinkedCommand(Messages.Field, BlobPhotoFunc, PlaceFallback),
+                                new LinkedCommand(Messages.River, BlobPhotoFunc, PlaceFallback),
+                                new LinkedCommand(Messages.Forest, BlobPhotoFunc, PlaceFallback),
+                                new LinkedCommand(Messages.Food, FoodFunc)
                                 {
-                                    new LinkedCommand(Messages.Home, BlobPhotoFunc, PlaceFallback),
-                                    new LinkedCommand(Messages.Field, BlobPhotoFunc, PlaceFallback),
-                                    new LinkedCommand(Messages.River, BlobPhotoFunc, PlaceFallback),
-                                    new LinkedCommand(Messages.Forest, BlobPhotoFunc, PlaceFallback),
-                                    new LinkedCommand(Messages.Food, FoodFunc)
+                                    ChildCommands = new List<ILinkedCommand>
                                     {
-                                        ChildCommands = new List<ILinkedCommand>
+                                        new LinkedCommand(Messages.Minimarket, BlobPhotoFunc, FoodFallback)
                                         {
-                                            new LinkedCommand(Messages.Minimarket, BlobPhotoFunc, FoodFallback)
-                                            {
-                                                ChildCommands = new List<ILinkedCommand> { new LinkedCommand(Messages.MinimarketLocation, MinimarketLocationFunc, PlaceFallback) }
-                                            },
-                                            new LinkedCommand(Messages.Supermarket, BlobPhotoFunc, FoodFallback)
-                                            {
-                                                ChildCommands = new List<ILinkedCommand> { new LinkedCommand(Messages.SupermarketLocation, SupermarketLocationFunc, PlaceFallback) }
-                                            },
-                                            new LinkedCommand(Messages.Takeout, BlobPhotoFunc, FoodFallback)
-                                            {
-                                                ChildCommands = new List<ILinkedCommand> { new LinkedCommand(Messages.TakeoutLocation, TakeoutLocationFunc, PlaceFallback) }
-                                            }
+                                            ChildCommands = new List<ILinkedCommand> { new LinkedCommand(Messages.MinimarketLocation, MinimarketLocationFunc, PlaceFallback) }
+                                        },
+                                        new LinkedCommand(Messages.Supermarket, BlobPhotoFunc, FoodFallback)
+                                        {
+                                            ChildCommands = new List<ILinkedCommand> { new LinkedCommand(Messages.SupermarketLocation, SupermarketLocationFunc, PlaceFallback) }
+                                        },
+                                        new LinkedCommand(Messages.Takeout, BlobPhotoFunc, FoodFallback)
+                                        {
+                                            ChildCommands = new List<ILinkedCommand> { new LinkedCommand(Messages.TakeoutLocation, TakeoutLocationFunc, PlaceFallback) }
                                         }
                                     }
                                 }
-                            },
-                            new LinkedCommand(Messages.Path, PathFunc)
+                            }
+                        },
+                        new LinkedCommand(Messages.Path, PathFunc)
+                        {
+                            ChildCommands = new List<ILinkedCommand>
                             {
-                                ChildCommands = new List<ILinkedCommand>
+                                new LinkedCommand(Messages.BusSchedule, BusScheduleFunc)
                                 {
-                                    new LinkedCommand(Messages.BusSchedule, BusScheduleFunc)
+                                    ChildCommands = new List<ILinkedCommand>
                                     {
-                                        ChildCommands = new List<ILinkedCommand>
-                                        {
-                                            new LinkedCommand(Messages.ToCity, ToCityFunc, RouteFallback),
-                                            new LinkedCommand(Messages.FromCity, FromCityFunc, RouteFallback)
-                                        }
-                                    },
-                                    new LinkedCommand(Messages.HomeGeo, HomeGeoFunc)
-                                }
+                                        new LinkedCommand(Messages.ToCity, ToCityFunc, RouteFallback),
+                                        new LinkedCommand(Messages.FromCity, FromCityFunc, RouteFallback)
+                                    }
+                                },
+                                new LinkedCommand(Messages.HomeGeo, HomeGeoFunc)
                             }
                         }
-                    },
+                    }
+                },
+            }
+        };
+
+    private async Task StartFunc(Request request)
+    {
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+
+        if (!string.IsNullOrEmpty(request.CallbackQueryId)) // fallback query needs to be answered
+        {
+            await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+        }
+
+        string responseText;
+        var name = request.User.FirstName + (string.IsNullOrEmpty(request.User.LastName) ? string.Empty : $" {request.User.LastName}");
+
+        switch (request.Message)
+        {
+            case Messages.Start:
+                {
+                    responseText = $"Hi, {name}!\nHow can I help you?";
+                    break;
                 }
-            };
-        }
-
-        public ILinkedCommand GetCommandByMessage(string message)
-        {
-            var children = new Queue<ILinkedCommand>();
-            children.Enqueue(_rootCommand);
-
-            while(children.Count != 0)
-            {
-                var node = children.Dequeue();
-
-                if (node.CommandMessage.Equals(message, StringComparison.InvariantCultureIgnoreCase))
+            case Messages.FallBack:
                 {
-                    return node;
+                    responseText = "Can I help you with anything else?";
+                    break;
                 }
-                node.ChildCommands.ForEach(childNode => children.Enqueue(childNode));
-            }
-            return _defaultCommand;
-        }
-
-        private async Task StartFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-
-            if (!string.IsNullOrEmpty(request.CallbackQueryId)) // fallback query needs to be answered
-            {
-                await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-            }
-
-            string responseText;
-            var name = request.User.FirstName + (string.IsNullOrEmpty(request.User.LastName) ? string.Empty : $" {request.User.LastName}");
-
-            switch(request.Message)
-            {
-                case Messages.Start:
-                    {
-                        responseText = $"Hi, {name}!\nHow can I help you?";
-                        break;
-                    }
-                case Messages.FallBack:
-                    {
-                        responseText = "Can I help you with anything else?";
-                        break;
-                    }
-                default:
-                    {
-                        responseText = $"What we were talking about, {name}?";
-                        break;
-                    }
-            }
-
-            await botClient.SendTextMessageAsync(request.ChatId, responseText,
-                replyMarkup: new InlineKeyboardMarkup(new[]
+            default:
                 {
-                    new [] { InlineKeyboardButton.WithCallbackData($"Maps {Emojis.Map}", Messages.Path) },
-                    new [] { InlineKeyboardButton.WithCallbackData($"What's around? {Emojis.Eyes}", Messages.Places) },
-                    new [] { InlineKeyboardButton.WithUrl($"Booking {Emojis.HouseWithGarden}", "https://abnb.me/Y5SjYolOneb") },
-                    new [] { InlineKeyboardButton.WithCallbackData($"About us {Emojis.SpeechBalloon}", Messages.About) },
-                    new [] { InlineKeyboardButton.WithCallbackData($"F.A.Q. {Emojis.PageWithCurl}", Messages.FAQ) }
-                }));
-        }
-
-        private async Task PathFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-            await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            await botClient.SendTextMessageAsync(request.ChatId, "Pick your map!",
-                replyMarkup: new InlineKeyboardMarkup(new[]
-                {
-                    new [] { InlineKeyboardButton.WithCallbackData($"Bus Schedule {Emojis.Minibus}", Messages.BusSchedule) },
-                    new [] { InlineKeyboardButton.WithCallbackData($"Home Geolocation {Emojis.Pushpin}", Messages.HomeGeo) }
-                }));
-        }
-
-        private async Task BusScheduleFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-            await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            await botClient.SendTextMessageAsync(request.ChatId, "Choose your direction!",
-                replyMarkup: new InlineKeyboardMarkup(new[]
-                {
-                    new [] { InlineKeyboardButton.WithCallbackData($"From Kyiv {Emojis.RightPointing}", Messages.FromCity) },
-                    new [] { InlineKeyboardButton.WithCallbackData($"To Kyiv {Emojis.LeftPointing}", Messages.ToCity) }
-                }));
-        }
-
-        private async Task HomeGeoFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-            await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            await botClient.SendTextMessageAsync(request.ChatId, "Here are the coordinates!");
-
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
-            var latitude = float.Parse(Environment.GetEnvironmentVariable("LATITUDE", EnvironmentVariableTarget.Process));
-            var longitude = float.Parse(Environment.GetEnvironmentVariable("LONGITUDE", EnvironmentVariableTarget.Process));
-            await botClient.SendLocationAsync(request.ChatId, latitude, longitude);
-        }
-
-        private async Task ToCityFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-            await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            var schedule = "Station: Near the road\nBus #341: Rozhny-Kyiv\nDeparture time: 7:00, 8:10, 9:45, 10:50, 12:35, 15:50, 17:20, 19:10, 20:15";
-            await botClient.SendTextMessageAsync(request.ChatId, schedule);
-
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
-            await botClient.SendLocationAsync(request.ChatId, 50.6342762f, 30.7163217f);
-        }
-
-        private async Task FromCityFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-            await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            var schedule = "Station: AS Darnitsa\nBus #341: Kyiv-Rozhny\nDeparture time: 6:45, 8:00, 9:25, 11:05, 14:00, 15:25, 17:30, 18:45";
-            await botClient.SendTextMessageAsync(request.ChatId, schedule);
-
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
-            await botClient.SendLocationAsync(request.ChatId, 50.46053868555018f, 30.637056277607083f);
-        }
-
-        private async Task RouteFallback(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-
-            await botClient.SendTextMessageAsync(request.ChatId, "Have a nice trip!", replyMarkup: new InlineKeyboardMarkup(new[]
-            {
-                new [] { InlineKeyboardButton.WithCallbackData($"Okay! {Emojis.OkSign}", Messages.FallBack) }
-            }));
-        }
-
-        private async Task FaqFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-
-            await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            await botClient.SendTextMessageAsync(request.ChatId, "To use this bot simply follow the commands appearing on the screen.\n\n" +
-                "If you'd like to begin conversation with the bot from the start type /start.\n\n" +
-                "Or choose it from the list of available commands in the bottom right corner with '/' button.");
-        }
-
-        private async Task AboutFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            await botClient.SendTextMessageAsync(request.ChatId,
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
-                "Nam pretium eros sit amet gravida aliquet. Ut ac laoreet est. " +
-                "Vivamus non molestie est.\n\n" +
-                "Telegram: @number716\n" +
-                "Instagram: https://instagram.com/another__place_");
-        }
-
-        private async Task OtherOptionsFallback(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-
-            await botClient.SendTextMessageAsync(request.ChatId, "Check other options?", replyMarkup: new InlineKeyboardMarkup(new[]
-            {
-                new [] { InlineKeyboardButton.WithCallbackData($"Yeah! {Emojis.OkSign}", Messages.FallBack) }
-            }));
-        }
-
-        private async Task PlacesFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-
-            await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            await botClient.SendTextMessageAsync(request.ChatId, "What would you like to see?",
-                replyMarkup: new InlineKeyboardMarkup(new[]
-                {
-                        new [] { InlineKeyboardButton.WithCallbackData($"Home {Emojis.House}", Messages.Home) },
-                        new [] { InlineKeyboardButton.WithCallbackData($"Food {Emojis.FrenchFries}", Messages.Food) },
-                        new [] { InlineKeyboardButton.WithCallbackData($"River {Emojis.WaterWave}", Messages.River) },
-                        new [] { InlineKeyboardButton.WithCallbackData($"Forest {Emojis.Tree}", Messages.Forest) },
-                        new [] { InlineKeyboardButton.WithCallbackData($"Field {Emojis.EarOfRice}", Messages.Field) }
-                }));
-        }
-
-        private async Task BlobPhotoFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-
-            await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            await botClient.SendMediaGroupAsync(await GetMediaFromBlobByPrefix(clientFactory.GetBlobContainerClient(), request.Message), request.ChatId);
-        }
-
-        private async Task<IAlbumInputMedia[]> GetMediaFromBlobByPrefix(BlobContainerClient blobContainerClinet, string mediaPrefix)
-        {
-            var mediaList = new List<IAlbumInputMedia>();
-            var blobPages = blobContainerClinet.GetBlobsAsync(prefix: mediaPrefix).AsPages();
-
-            await foreach (var blobPage in blobPages)
-            {
-                foreach (var blobItem in blobPage.Values)
-                {
-                    mediaList.Add(new InputMediaPhoto(blobContainerClinet.GetBlobClient(blobItem.Name).Uri.AbsoluteUri));
+                    responseText = $"What we were talking about, {name}?";
+                    break;
                 }
-            }
-            return mediaList.ToArray();
         }
 
-        private async Task PlaceFallback(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-
-            await botClient.SendTextMessageAsync(request.ChatId, "Looks nice?", replyMarkup: new InlineKeyboardMarkup(new[]
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, responseText,
+            replyMarkup: new InlineKeyboardMarkup(new[]
             {
-                new [] { InlineKeyboardButton.WithCallbackData($"Yeap! {Emojis.HeartEyes}", Messages.FallBack) }
+                new [] { InlineKeyboardButton.WithCallbackData($"Maps {Emojis.Map}", Messages.Path) },
+                new [] { InlineKeyboardButton.WithCallbackData($"What's around? {Emojis.Eyes}", Messages.Places) },
+                new [] { InlineKeyboardButton.WithUrl($"Booking {Emojis.HouseWithGarden}", "https://abnb.me/Y5SjYolOneb") },
+                new [] { InlineKeyboardButton.WithCallbackData($"About us {Emojis.SpeechBalloon}", Messages.About) },
+                new [] { InlineKeyboardButton.WithCallbackData($"F.A.Q. {Emojis.PageWithCurl}", Messages.FAQ) }
             }));
-        }
+    }
 
-        private async Task FoodFunc(IClientFactory clientFactory, TelegramRequest request)
+    private async Task PathFunc(Request request)
+    {
+        await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Pick your map!",
+            replyMarkup: new InlineKeyboardMarkup(new[]
+            {
+                new [] { InlineKeyboardButton.WithCallbackData($"Bus Schedule {Emojis.Minibus}", Messages.BusSchedule) },
+                new [] { InlineKeyboardButton.WithCallbackData($"Home Geolocation {Emojis.Pushpin}", Messages.HomeGeo) }
+            }));
+    }
+
+    private async Task BusScheduleFunc(Request request)
+    {
+        await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Choose your direction!",
+            replyMarkup: new InlineKeyboardMarkup(new[]
+            {
+                new [] { InlineKeyboardButton.WithCallbackData($"From Kyiv {Emojis.RightPointing}", Messages.FromCity) },
+                new [] { InlineKeyboardButton.WithCallbackData($"To Kyiv {Emojis.LeftPointing}", Messages.ToCity) }
+            }));
+    }
+
+    private async Task HomeGeoFunc(Request request)
+    {
+        await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Here are the coordinates!");
+
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
+        var latitude = float.Parse(Environment.GetEnvironmentVariable("LATITUDE", EnvironmentVariableTarget.Process));
+        var longitude = float.Parse(Environment.GetEnvironmentVariable("LONGITUDE", EnvironmentVariableTarget.Process));
+        await _telegramBotClient.SendLocationAsync(request.ChatId, latitude, longitude);
+    }
+
+    private async Task ToCityFunc(Request request)
+    {
+        await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        var schedule = "Station: Near the road\nBus #341: Rozhny-Kyiv\nDeparture time: 7:00, 8:10, 9:45, 10:50, 12:35, 15:50, 17:20, 19:10, 20:15";
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, schedule);
+
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
+        await _telegramBotClient.SendLocationAsync(request.ChatId, 50.6342762f, 30.7163217f);
+    }
+
+    private async Task FromCityFunc(Request request)
+    {
+        await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        var schedule = "Station: AS Darnitsa\nBus #341: Kyiv-Rozhny\nDeparture time: 6:45, 8:00, 9:25, 11:05, 14:00, 15:25, 17:30, 18:45";
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, schedule);
+
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
+        await _telegramBotClient.SendLocationAsync(request.ChatId, 50.46053868555018f, 30.637056277607083f);
+    }
+
+    private async Task RouteFallback(Request request)
+    {
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Have a nice trip!", replyMarkup: new InlineKeyboardMarkup(new[]
         {
-            var botClient = await clientFactory.GetTelegramBotClient();
+            new [] { InlineKeyboardButton.WithCallbackData($"Okay! {Emojis.OkSign}", Messages.FallBack) }
+        }));
+    }
 
-            await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            await botClient.SendTextMessageAsync(request.ChatId, "Choose yours!",
-                replyMarkup: new InlineKeyboardMarkup(new[]
+    private async Task FaqFunc(Request request)
+    {
+        await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "To use this bot simply follow the commands appearing on the screen.\n\n" +
+            "If you'd like to begin conversation with the bot from the start type /start.\n\n" +
+            "Or choose it from the list of available commands in the bottom right corner with '/' button.");
+    }
+
+    private async Task AboutFunc(Request request)
+    {
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId,
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+            "Nam pretium eros sit amet gravida aliquet. Ut ac laoreet est. " +
+            "Vivamus non molestie est.\n\n" +
+            "Telegram: @number716\n" +
+            "Instagram: https://instagram.com/another__place_");
+    }
+
+    private async Task OtherOptionsFallback(Request request)
+    {
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Check other options?", replyMarkup: new InlineKeyboardMarkup(new[]
+        {
+            new [] { InlineKeyboardButton.WithCallbackData($"Yeah! {Emojis.OkSign}", Messages.FallBack) }
+        }));
+    }
+
+    private async Task PlacesFunc(Request request)
+    {
+        await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "What would you like to see?",
+            replyMarkup: new InlineKeyboardMarkup(new[]
+            {
+                    new [] { InlineKeyboardButton.WithCallbackData($"Home {Emojis.House}", Messages.Home) },
+                    new [] { InlineKeyboardButton.WithCallbackData($"Food {Emojis.FrenchFries}", Messages.Food) },
+                    new [] { InlineKeyboardButton.WithCallbackData($"River {Emojis.WaterWave}", Messages.River) },
+                    new [] { InlineKeyboardButton.WithCallbackData($"Forest {Emojis.Tree}", Messages.Forest) },
+                    new [] { InlineKeyboardButton.WithCallbackData($"Field {Emojis.EarOfRice}", Messages.Field) }
+            }));
+    }
+
+    private async Task BlobPhotoFunc(Request request)
+    {
+        await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        await _telegramBotClient.SendMediaGroupAsync(request.ChatId,
+            await GetMediaFromBlobByPrefix(request.Message));
+    }
+
+    private async Task<IAlbumInputMedia[]> GetMediaFromBlobByPrefix(string mediaPrefix)
+    {
+        var mediaList = new List<IAlbumInputMedia>();
+        var blobContainerClient = _blobServiceClientWrapper.GetBlobContainerClient();
+        var blobPages = blobContainerClient.GetBlobsAsync(prefix: mediaPrefix).AsPages();
+
+        await foreach (var blobPage in blobPages)
+        {
+            foreach (var blobItem in blobPage.Values)
+            {
+                mediaList.Add(new InputMediaPhoto(blobContainerClient.GetBlobClient(blobItem.Name).Uri.AbsoluteUri));
+            }
+        }
+        return mediaList.ToArray();
+    }
+
+    private async Task PlaceFallback(Request request)
+    {
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Looks nice?", replyMarkup: new InlineKeyboardMarkup(new[]
+        {
+            new [] { InlineKeyboardButton.WithCallbackData($"Yeap! {Emojis.HeartEyes}", Messages.FallBack) }
+        }));
+    }
+
+    private async Task FoodFunc(Request request)
+    {
+        await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Choose yours!",
+            replyMarkup: new InlineKeyboardMarkup(new[]
+            {
+                new[] { InlineKeyboardButton.WithCallbackData($"Supermarket {Emojis.Store}", Messages.Supermarket) },
+                new[] { InlineKeyboardButton.WithCallbackData($"Minimarket {Emojis.PotOfFood}", Messages.Minimarket) },
+                new[] { InlineKeyboardButton.WithCallbackData($"Takeout {Emojis.Pizza}", Messages.Takeout) }
+            }));
+    }
+
+    private async Task FoodFallback(Request request)
+    {
+        var callbackCommand = string.Empty;
+        switch (request.Message)
+        {
+            case Messages.Minimarket:
                 {
-                    new[] { InlineKeyboardButton.WithCallbackData($"Supermarket {Emojis.Store}", Messages.Supermarket) },
-                    new[] { InlineKeyboardButton.WithCallbackData($"Minimarket {Emojis.PotOfFood}", Messages.Minimarket) },
-                    new[] { InlineKeyboardButton.WithCallbackData($"Takeout {Emojis.Pizza}", Messages.Takeout) }
-                }));
+                    callbackCommand = Messages.MinimarketLocation;
+                    break;
+                }
+            case Messages.Supermarket:
+                {
+                    callbackCommand = Messages.SupermarketLocation;
+                    break;
+                }
+            case Messages.Takeout:
+                {
+                    callbackCommand = Messages.TakeoutLocation;
+                    break;
+                }
+            default:
+                {
+                    break;
+                }
         }
 
-        private async Task FoodFallback(IClientFactory clientFactory, TelegramRequest request)
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "See location?", replyMarkup: new InlineKeyboardMarkup(new[]
         {
-            var botClient = await clientFactory.GetTelegramBotClient();
+            new [] { InlineKeyboardButton.WithCallbackData($"Yes! {Emojis.DeliciousFace}", callbackCommand) }
+        }));
+    }
 
-            var callbackCommand = string.Empty;
-            switch (request.Message)
-            {
-                case Messages.Minimarket:
-                    {
-                        callbackCommand = Messages.MinimarketLocation;
-                        break;
-                    }
-                case Messages.Supermarket:
-                    {
-                        callbackCommand = Messages.SupermarketLocation;
-                        break;
-                    }
-                case Messages.Takeout:
-                    {
-                        callbackCommand = Messages.TakeoutLocation;
-                        break;
-                    }
-                default:
-                    {
-                        break;
-                    }
-            }
+    private async Task MinimarketLocationFunc(Request request)
+    {
+        await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Minimarket is just near by!");
 
-            await botClient.SendTextMessageAsync(request.ChatId, "See location?", replyMarkup: new InlineKeyboardMarkup(new[]
-            {
-                new [] { InlineKeyboardButton.WithCallbackData($"Yes! {Emojis.DeliciousFace}", callbackCommand) }
-            }));
-        }
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
+        await _telegramBotClient.SendLocationAsync(request.ChatId, 50.6632402f, 30.7309756f);
+    }
 
-        private async Task MinimarketLocationFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
+    private async Task SupermarketLocationFunc(Request request)
+    {
+        await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
 
-            await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            await botClient.SendTextMessageAsync(request.ChatId, "Minimarket is just near by!");
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Supermarket is just near by!");
 
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
-            await botClient.SendLocationAsync(request.ChatId, 50.6632402f, 30.7309756f);
-        }
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
+        await _telegramBotClient.SendLocationAsync(request.ChatId, 50.6030410f, 30.7044328f);
+    }
 
-        private async Task SupermarketLocationFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
+    private async Task TakeoutLocationFunc(Request request)
+    {
+        await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
 
-            await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
+        await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Takeout is just near by!");
 
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            await botClient.SendTextMessageAsync(request.ChatId, "Supermarket is just near by!");
-
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
-            await botClient.SendLocationAsync(request.ChatId, 50.6030410f, 30.7044328f);
-        }
-
-        private async Task TakeoutLocationFunc(IClientFactory clientFactory, TelegramRequest request)
-        {
-            var botClient = await clientFactory.GetTelegramBotClient();
-
-            await botClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
-
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
-            await botClient.SendTextMessageAsync(request.ChatId, "Takeout is just near by!");
-
-            await botClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
-            await botClient.SendLocationAsync(request.ChatId, 50.6781993f, 30.7388073f);
-        }
+        await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.FindLocation);
+        await _telegramBotClient.SendLocationAsync(request.ChatId, 50.6781993f, 30.7388073f);
     }
 }
