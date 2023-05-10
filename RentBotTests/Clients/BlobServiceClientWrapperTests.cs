@@ -1,10 +1,10 @@
 ﻿using Moq;
 using NUnit.Framework;
-using RentBot.Services.Implementation;
 using Microsoft.Extensions.Logging;
 using System;
+using RentBot.Clients.Implementation;
 
-namespace RentBot.Tests.Services;
+namespace RentBot.Tests.Clients;
 
 [TestFixture]
 public class BlobServiceClientWrapperTests
