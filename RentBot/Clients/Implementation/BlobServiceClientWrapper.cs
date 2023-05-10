@@ -1,10 +1,10 @@
 ﻿using Azure.Identity;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;
-using RentBot.Services.Interfaces;
+using RentBot.Clients.Interfaces;
 using System;
 
-namespace RentBot.Services.Implementation;
+namespace RentBot.Clients.Implementation;
 
 public class BlobServiceClientWrapper : IBlobServiceClientWrapper
 {

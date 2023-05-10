@@ -1,6 +1,8 @@
 ﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RentBot.Clients.Implementation;
+using RentBot.Clients.Interfaces;
 using RentBot.Services.Implementation;
 using RentBot.Services.Interfaces;
 using Telegram.Bot;
