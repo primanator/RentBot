@@ -4,14 +4,14 @@ using Telegram.Bot.Types.Enums;
 
 namespace RentBot.Model;
 
-public class Request
+public class TelegramRequest
 {
     public long ChatId { get; private set; }
     public string CallbackQueryId { get; private set; }
     public User User { get; private set; }
     public string Message { get; private set; }
 
-    public Request(Update update)
+    public TelegramRequest(Update update)
     {
         switch (update.Type)
         {
@@ -33,7 +33,7 @@ public class Request
                 }
             default:
                 {
-                    throw new ArgumentOutOfRangeException($"{nameof(Request)} can't decompose update type {update.Type}!");
+                    throw new ArgumentOutOfRangeException($"{nameof(TelegramRequest)} can't decompose update type {update.Type}!");
                 }
         }
     }

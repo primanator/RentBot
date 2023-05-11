@@ -18,9 +18,10 @@ namespace RentBot.Tests.Services;
 public class BotServiceTests
 {
     private Mock<ICommandService> _commandServiceMock;
+    private Mock<IModelConverterService> _modelConverterServiceMock;
     private Mock<ILogger<BotService>> _loggerMock;
-    private Mock<Func<Request, Task>> _functionMock;
-    private Mock<Func<Request, Task>> _fallbackMock;
+    private Mock<Func<TelegramRequest, Task>> _functionMock;
+    private Mock<Func<TelegramRequest, Task>> _fallbackMock;
     private BotService _botService;
     private Update _updatePayload;
 
@@ -28,10 +29,11 @@ public class BotServiceTests
     public void SetUp()
     {
         _commandServiceMock = new Mock<ICommandService>();
+        _modelConverterServiceMock = new Mock<IModelConverterService>();
         _loggerMock = new Mock<ILogger<BotService>>();
-        _functionMock = new Mock<Func<Request, Task>>();
-        _fallbackMock = new Mock<Func<Request, Task>>();
-        _botService = new BotService(_commandServiceMock.Object, _loggerMock.Object);
+        _functionMock = new Mock<Func<TelegramRequest, Task>>();
+        _fallbackMock = new Mock<Func<TelegramRequest, Task>>();
+        _botService = new BotService(_commandServiceMock.Object, _modelConverterServiceMock.Object, _loggerMock.Object);
         _updatePayload = GenerateUpdatePayload();
     }
 
@@ -39,6 +41,7 @@ public class BotServiceTests
     public void TearDown()
     {
         _commandServiceMock = null;
+        _modelConverterServiceMock = null;
         _loggerMock = null;
         _functionMock = null;
         _fallbackMock = null;
@@ -49,48 +52,48 @@ public class BotServiceTests
     [Test]
     public async Task ProcessAsync_CallsGetCommandByMessage_ByDefault()
     {
-        var request = new Request(_updatePayload);
+        var request = new TelegramRequest(_updatePayload);
         _commandServiceMock
-            .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
+            .Setup(commandService => commandService.GetCommandByMessageAsync(It.IsAny<string>()))
             .ReturnsAsync(new LinkedCommand(Messages.Start));
 
         await _botService.ProcessAsync(request);
 
-        _commandServiceMock.Verify(commnadService => commnadService.GetCommandByMessage(It.IsAny<string>()), Times.Once);
+        _commandServiceMock.Verify(commnadService => commnadService.GetCommandByMessageAsync(It.IsAny<string>()), Times.Once);
     }
 
     [Test]
     public async Task ProcessAsync_CallsCommandFunction_ByDefault()
     {
-        var request = new Request(_updatePayload);
+        var request = new TelegramRequest(_updatePayload);
         _commandServiceMock
-            .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
+            .Setup(commandService => commandService.GetCommandByMessageAsync(It.IsAny<string>()))
             .ReturnsAsync(new LinkedCommand(Messages.Start, _functionMock.Object, _fallbackMock.Object));
 
         await _botService.ProcessAsync(request);
 
-        _functionMock.Verify(function => function(It.IsAny<Request>()), Times.Once);
+        _functionMock.Verify(function => function(It.IsAny<TelegramRequest>()), Times.Once);
     }
 
     [Test]
     public async Task ProcessAsync_CallsCommandFallback_ByDefault()
     {
-        var request = new Request(_updatePayload);
+        var request = new TelegramRequest(_updatePayload);
         _commandServiceMock
-            .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
+            .Setup(commandService => commandService.GetCommandByMessageAsync(It.IsAny<string>()))
             .ReturnsAsync(new LinkedCommand(Messages.Start, _functionMock.Object, _fallbackMock.Object));
 
         await _botService.ProcessAsync(request);
 
-        _fallbackMock.Verify(function => function(It.IsAny<Request>()), Times.Once);
+        _fallbackMock.Verify(function => function(It.IsAny<TelegramRequest>()), Times.Once);
     }
 
     [Test]
     public async Task ProcessAsync_CallsLogger_WhenCommandServiceThrows()
     {
-        var request = new Request(_updatePayload);
+        var request = new TelegramRequest(_updatePayload);
         _commandServiceMock
-            .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
+            .Setup(commandService => commandService.GetCommandByMessageAsync(It.IsAny<string>()))
             .ThrowsAsync(new Exception());
         _loggerMock
             .Setup(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
@@ -104,12 +107,12 @@ public class BotServiceTests
     [Test]
     public async Task ProcessAsync_CallsLogger_WhenFunctionThrows()
     {
-        var request = new Request(_updatePayload);
+        var request = new TelegramRequest(_updatePayload);
         _commandServiceMock
-            .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
+            .Setup(commandService => commandService.GetCommandByMessageAsync(It.IsAny<string>()))
             .ReturnsAsync(new LinkedCommand(Messages.Start, _functionMock.Object, _fallbackMock.Object));
         _functionMock
-            .Setup(function => function(It.IsAny<Request>()))
+            .Setup(function => function(It.IsAny<TelegramRequest>()))
             .ThrowsAsync(new Exception());
         _loggerMock
             .Setup(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
@@ -123,12 +126,12 @@ public class BotServiceTests
     [Test]
     public async Task Process_Async_CallsLogger_WhenFallbackThrows()
     {
-        var request = new Request(_updatePayload);
+        var request = new TelegramRequest(_updatePayload);
         _commandServiceMock
-            .Setup(commandService => commandService.GetCommandByMessage(It.IsAny<string>()))
+            .Setup(commandService => commandService.GetCommandByMessageAsync(It.IsAny<string>()))
             .ReturnsAsync(new LinkedCommand(Messages.Start, _functionMock.Object, _fallbackMock.Object));
         _functionMock
-            .Setup(function => function(It.IsAny<Request>()))
+            .Setup(function => function(It.IsAny<TelegramRequest>()))
             .ThrowsAsync(new Exception());
         _loggerMock
             .Setup(logger => logger.Log(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()));

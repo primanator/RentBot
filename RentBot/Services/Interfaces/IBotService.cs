@@ -1,9 +1,9 @@
 ﻿using System.Threading.Tasks;
-using RentBot.Model;
+using Microsoft.AspNetCore.Http;
 
 namespace RentBot.Services.Interfaces;
 
 public interface IBotService
 {
-    Task ProcessAsync(Request request);
+    Task ProcessAsync(HttpRequest httpRequest);
 }

@@ -11,6 +11,6 @@ public interface ILinkedCommand
 {
     string CommandMessage { get; }
     List<ILinkedCommand> ChildCommands { get; }
-    Func<Request, Task> Function { get; }
-    Func<Request, Task> Fallback { get; }
+    Func<TelegramRequest, Task> Function { get; }
+    Func<TelegramRequest, Task> Fallback { get; }
 }
