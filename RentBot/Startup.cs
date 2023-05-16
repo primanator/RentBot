@@ -37,8 +37,9 @@ public class Startup : FunctionsStartup
     {
 
         var blobAccountName = configuration["BLOB_ACCOUNT_NAME"];
+        var blobAccountKey = configuration["BLOB_ACCOUNT_KEY"];
         var blobContainerName = configuration["BLOB_CONTAINER_NAME"];
 
-        return ActivatorUtilities.CreateInstance<BlobServiceClientWrapper>(serviceProvider, blobAccountName, blobContainerName);
+        return new BlobServiceClientWrapper(blobAccountName, blobAccountKey, blobContainerName);
     }
 }

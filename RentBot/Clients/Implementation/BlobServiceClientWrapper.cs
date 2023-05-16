@@ -1,6 +1,6 @@
 ﻿using Azure.Identity;
+using Azure.Storage;
 using Azure.Storage.Blobs;
-using Microsoft.Extensions.Logging;
 using RentBot.Clients.Interfaces;
 using System;
 
@@ -10,13 +10,11 @@ public class BlobServiceClientWrapper : IBlobServiceClientWrapper
 {
     private readonly BlobServiceClient _blobServiceClient;
     private readonly string _blobContainerName;
-    private readonly ILogger _logger;
 
-    public BlobServiceClientWrapper(string accountName, string blobContainerName, ILogger<BlobServiceClientWrapper> logger)
+    public BlobServiceClientWrapper(string accountName, string accountKey, string blobContainerName)
     {
-        _blobServiceClient = new BlobServiceClient(new Uri($"https://{accountName}.blob.core.windows.net"), new DefaultAzureCredential());
+        _blobServiceClient = new BlobServiceClient(new Uri($"https://{accountName}.blob.core.windows.net"), new StorageSharedKeyCredential(accountName, accountKey));
         _blobContainerName = blobContainerName;
-        _logger = logger;
     }
 
     public BlobContainerClient GetBlobContainerClient()
