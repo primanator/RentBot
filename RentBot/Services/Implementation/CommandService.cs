@@ -30,6 +30,7 @@ public class CommandService : ICommandService
     {
         await ConfigureTelegramBotClientCommands();
 
+        // Breadth-First Search (BFS) algorithm
         var children = new Queue<ILinkedCommand>();
         children.Enqueue(GetRootCommand());
 

@@ -13,10 +13,7 @@ public class ModelConverterService : IModelConverterService
 {
     private readonly ILogger<ModelConverterService> _logger;
 
-    public ModelConverterService(ILogger<ModelConverterService> logger)
-    {
-        _logger = logger;
-    }
+    public ModelConverterService(ILogger<ModelConverterService> logger) => _logger = logger;
 
     public TelegramRequest UpdateToTelegramRequest(Update update)
     {

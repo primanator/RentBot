@@ -22,11 +22,11 @@ public class BotServiceTests
     private Mock<IModelConverterService> _modelConverterServiceMock;
     private Mock<ILogger<BotService>> _loggerMock;
     private Mock<HttpRequest> _httpRequestMock;
-    private Mock<TelegramRequest> _telegramRequestMock;
     private Mock<Func<TelegramRequest, Task>> _functionMock;
     private Mock<Func<TelegramRequest, Task>> _fallbackMock;
     private BotService _botService;
     private Update _updatePayload;
+    private TelegramRequest _telegramRequest;
 
     [SetUp]
     public void SetUp()
@@ -35,11 +35,11 @@ public class BotServiceTests
         _modelConverterServiceMock = new Mock<IModelConverterService>();
         _loggerMock = new Mock<ILogger<BotService>>();
         _httpRequestMock = new Mock<HttpRequest>();
-        _telegramRequestMock = new Mock<TelegramRequest>();
         _functionMock = new Mock<Func<TelegramRequest, Task>>();
         _fallbackMock = new Mock<Func<TelegramRequest, Task>>();
         _botService = new BotService(_commandServiceMock.Object, _modelConverterServiceMock.Object, _loggerMock.Object);
         _updatePayload = GenerateUpdatePayload();
+        _telegramRequest = new TelegramRequest(_updatePayload);
     }
 
     [TearDown]
@@ -49,11 +49,11 @@ public class BotServiceTests
         _modelConverterServiceMock = null;
         _loggerMock = null;
         _httpRequestMock = null;
-        _telegramRequestMock = null;
         _functionMock = null;
         _fallbackMock = null;
         _botService = null;
         _updatePayload = null;
+        _telegramRequest = null;
     }
 
     [Test]
@@ -68,7 +68,7 @@ public class BotServiceTests
             .ReturnsAsync(_updatePayload);
         _modelConverterServiceMock
             .Setup(modelConverterService => modelConverterService.UpdateToTelegramRequest(It.IsAny<Update>()))
-            .Returns(_telegramRequestMock.Object);
+            .Returns(_telegramRequest);
 
         await _botService.ProcessAsync(_httpRequestMock.Object);
 
@@ -87,7 +87,7 @@ public class BotServiceTests
             .ReturnsAsync(_updatePayload);
         _modelConverterServiceMock
             .Setup(modelConverterService => modelConverterService.UpdateToTelegramRequest(It.IsAny<Update>()))
-            .Returns(_telegramRequestMock.Object);
+            .Returns(_telegramRequest);
 
         await _botService.ProcessAsync(_httpRequestMock.Object);
 
@@ -106,7 +106,7 @@ public class BotServiceTests
             .ReturnsAsync(_updatePayload);
         _modelConverterServiceMock
             .Setup(modelConverterService => modelConverterService.UpdateToTelegramRequest(It.IsAny<Update>()))
-            .Returns(_telegramRequestMock.Object);
+            .Returns(_telegramRequest);
 
         await _botService.ProcessAsync(_httpRequestMock.Object);
 
@@ -127,7 +127,7 @@ public class BotServiceTests
             .ReturnsAsync(_updatePayload);
         _modelConverterServiceMock
             .Setup(modelConverterService => modelConverterService.UpdateToTelegramRequest(It.IsAny<Update>()))
-            .Returns(_telegramRequestMock.Object);
+            .Returns(_telegramRequest);
 
         await _botService.ProcessAsync(_httpRequestMock.Object);
 
@@ -152,7 +152,7 @@ public class BotServiceTests
             .ReturnsAsync(_updatePayload);
         _modelConverterServiceMock
             .Setup(modelConverterService => modelConverterService.UpdateToTelegramRequest(It.IsAny<Update>()))
-            .Returns(_telegramRequestMock.Object);
+            .Returns(_telegramRequest);
 
         await _botService.ProcessAsync(_httpRequestMock.Object);
 
@@ -177,7 +177,7 @@ public class BotServiceTests
             .ReturnsAsync(_updatePayload);
         _modelConverterServiceMock
             .Setup(modelConverterService => modelConverterService.UpdateToTelegramRequest(It.IsAny<Update>()))
-            .Returns(_telegramRequestMock.Object);
+            .Returns(_telegramRequest);
 
         await _botService.ProcessAsync(_httpRequestMock.Object);
 
