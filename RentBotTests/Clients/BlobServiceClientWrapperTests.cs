@@ -1,6 +1,4 @@
-﻿using Moq;
-using NUnit.Framework;
-using Microsoft.Extensions.Logging;
+﻿using NUnit.Framework;
 using System;
 using RentBot.Clients.Implementation;
 
@@ -9,36 +7,42 @@ namespace RentBot.Tests.Clients;
 [TestFixture]
 public class BlobServiceClientWrapperTests
 {
-    private Mock<ILogger<BlobServiceClientWrapper>> _loggerMock;
     private string _accountName;
+    private string _accountKey;
     private string _blobContainerName;
 
     [SetUp]
     public void SetUp()
     {
-        _loggerMock = new Mock<ILogger<BlobServiceClientWrapper>>();
         _accountName = "accountName";
+        _accountKey = "QWKTNwK3deyklb0TCyT0fCehqaHLnTdt7AORaX5DnQ1tQL3fXbRZWuUlSyejNeskqnPA+VdYfGjRNmPP2rlLCA==";
         _blobContainerName = "blobContainerName";
     }
 
     [TearDown]
     public void TearDown()
     {
-        _loggerMock = null;
         _accountName = null;
+        _accountKey = null;
         _blobContainerName = null;
     }
 
     [Test]
-    public void Constructor_ThrowsArgumentNullException_WhenAccountNameIsNull()
+    public void Constructor_ThrowsUriFormatException_WhenAccountNameIsNull()
     {
-        Assert.Throws<UriFormatException>(() => new BlobServiceClientWrapper(null, _blobContainerName, _loggerMock.Object));
+        Assert.Throws<UriFormatException>(() => new BlobServiceClientWrapper(null, _accountKey, _blobContainerName));
+    }
+
+    [Test]
+    public void Constructor_ThrowsArgumentNullException_WhenAccountKeyIsNull()
+    {
+        Assert.Throws<ArgumentNullException>(() => new BlobServiceClientWrapper(_accountName, null, _blobContainerName));
     }
 
     [Test]
     public void Constructor_CreatesBlobServiceClient_WhenParametersAreValid()
     {
-        var blobServiceClientWrapper = new BlobServiceClientWrapper(_accountName, _blobContainerName, _loggerMock.Object);
+        var blobServiceClientWrapper = new BlobServiceClientWrapper(_accountName, _accountKey, _blobContainerName);
 
         Assert.That(blobServiceClientWrapper, Is.Not.Null);
     }
@@ -46,7 +50,7 @@ public class BlobServiceClientWrapperTests
     [Test]
     public void GetBlobContainerClient_ReturnsBlobContainerClient_WhenCalled()
     {
-        var blobServiceClientWrapper = new BlobServiceClientWrapper(_accountName, _blobContainerName, _loggerMock.Object);
+        var blobServiceClientWrapper = new BlobServiceClientWrapper(_accountName, _accountKey, _blobContainerName);
 
         var blobContainerClient = blobServiceClientWrapper.GetBlobContainerClient();
 
@@ -56,7 +60,7 @@ public class BlobServiceClientWrapperTests
     [Test]
     public void GetBlobContainerClient_ReturnsBlobContainerClientWithCorrectName_WhenCalled()
     {
-        var blobServiceClientWrapper = new BlobServiceClientWrapper(_accountName, _blobContainerName, _loggerMock.Object);
+        var blobServiceClientWrapper = new BlobServiceClientWrapper(_accountName, _accountKey, _blobContainerName);
 
         var blobContainerClient = blobServiceClientWrapper.GetBlobContainerClient();
 
@@ -66,7 +70,7 @@ public class BlobServiceClientWrapperTests
     [Test]
     public void GetBlobContainerClient_ReturnsBlobContainerClientWithCorrectUri_WhenCalled()
     {
-        var blobServiceClientWrapper = new BlobServiceClientWrapper(_accountName, _blobContainerName, _loggerMock.Object);
+        var blobServiceClientWrapper = new BlobServiceClientWrapper(_accountName, _accountKey, _blobContainerName);
 
         var blobContainerClient = blobServiceClientWrapper.GetBlobContainerClient();
 
