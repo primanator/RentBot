@@ -1,15 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
-using RentBot.Services.Interfaces;
 using RentBot.Services.Implementation;
-using Microsoft.Extensions.Logging;
-using Telegram.Bot.Types;
-using System;
-using RentBot.Model;
-using Telegram.Bot.Types.Enums;
-using System.Collections.Generic;
-using RentBot.Commands;
 using RentBot.Constants;
 using Telegram.Bot;
 using RentBot.Clients.Interfaces;
@@ -62,7 +54,7 @@ public class CommandServiceTests
     {
         var commandService = new CommandService(_telegramBotClientMock.Object, _blobServiceClientMock.Object);
         
-        var result = await commandService.GetCommandByMessage(message);
+        var result = await commandService.GetCommandByMessageAsync(message);
 
         Assert.That(result.CommandMessage, Is.EqualTo(message));
     }

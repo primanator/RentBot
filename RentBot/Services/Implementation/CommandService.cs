@@ -26,10 +26,11 @@ public class CommandService : ICommandService
         _blobServiceClientWrapper = blobServiceClientWrapper;
     }
 
-    public async Task<ILinkedCommand> GetCommandByMessage(string message)
+    public async Task<ILinkedCommand> GetCommandByMessageAsync(string message)
     {
         await ConfigureTelegramBotClientCommands();
 
+        // Breadth-First Search (BFS) algorithm
         var children = new Queue<ILinkedCommand>();
         children.Enqueue(GetRootCommand());
 
@@ -117,7 +118,7 @@ public class CommandService : ICommandService
             }
         };
 
-    private async Task StartFunc(Request request)
+    private async Task StartFunc(TelegramRequest request)
     {
         await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
 
@@ -159,7 +160,7 @@ public class CommandService : ICommandService
             }));
     }
 
-    private async Task PathFunc(Request request)
+    private async Task PathFunc(TelegramRequest request)
     {
         await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
 
@@ -172,7 +173,7 @@ public class CommandService : ICommandService
             }));
     }
 
-    private async Task BusScheduleFunc(Request request)
+    private async Task BusScheduleFunc(TelegramRequest request)
     {
         await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
 
@@ -185,7 +186,7 @@ public class CommandService : ICommandService
             }));
     }
 
-    private async Task HomeGeoFunc(Request request)
+    private async Task HomeGeoFunc(TelegramRequest request)
     {
         await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
 
@@ -198,7 +199,7 @@ public class CommandService : ICommandService
         await _telegramBotClient.SendLocationAsync(request.ChatId, latitude, longitude);
     }
 
-    private async Task ToCityFunc(Request request)
+    private async Task ToCityFunc(TelegramRequest request)
     {
         await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
 
@@ -210,7 +211,7 @@ public class CommandService : ICommandService
         await _telegramBotClient.SendLocationAsync(request.ChatId, 50.6342762f, 30.7163217f);
     }
 
-    private async Task FromCityFunc(Request request)
+    private async Task FromCityFunc(TelegramRequest request)
     {
         await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
 
@@ -222,7 +223,7 @@ public class CommandService : ICommandService
         await _telegramBotClient.SendLocationAsync(request.ChatId, 50.46053868555018f, 30.637056277607083f);
     }
 
-    private async Task RouteFallback(Request request)
+    private async Task RouteFallback(TelegramRequest request)
     {
         await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Have a nice trip!", replyMarkup: new InlineKeyboardMarkup(new[]
         {
@@ -230,7 +231,7 @@ public class CommandService : ICommandService
         }));
     }
 
-    private async Task FaqFunc(Request request)
+    private async Task FaqFunc(TelegramRequest request)
     {
         await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
         await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
@@ -239,7 +240,7 @@ public class CommandService : ICommandService
             "Or choose it from the list of available commands in the bottom right corner with '/' button.");
     }
 
-    private async Task AboutFunc(Request request)
+    private async Task AboutFunc(TelegramRequest request)
     {
         await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
         await _telegramBotClient.SendTextMessageAsync(request.ChatId,
@@ -250,7 +251,7 @@ public class CommandService : ICommandService
             "Instagram: https://instagram.com/another__place_");
     }
 
-    private async Task OtherOptionsFallback(Request request)
+    private async Task OtherOptionsFallback(TelegramRequest request)
     {
         await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Check other options?", replyMarkup: new InlineKeyboardMarkup(new[]
         {
@@ -258,7 +259,7 @@ public class CommandService : ICommandService
         }));
     }
 
-    private async Task PlacesFunc(Request request)
+    private async Task PlacesFunc(TelegramRequest request)
     {
         await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
         await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
@@ -273,7 +274,7 @@ public class CommandService : ICommandService
             }));
     }
 
-    private async Task BlobPhotoFunc(Request request)
+    private async Task BlobPhotoFunc(TelegramRequest request)
     {
         await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
         await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
@@ -297,7 +298,7 @@ public class CommandService : ICommandService
         return mediaList.ToArray();
     }
 
-    private async Task PlaceFallback(Request request)
+    private async Task PlaceFallback(TelegramRequest request)
     {
         await _telegramBotClient.SendTextMessageAsync(request.ChatId, "Looks nice?", replyMarkup: new InlineKeyboardMarkup(new[]
         {
@@ -305,7 +306,7 @@ public class CommandService : ICommandService
         }));
     }
 
-    private async Task FoodFunc(Request request)
+    private async Task FoodFunc(TelegramRequest request)
     {
         await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
         await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
@@ -318,7 +319,7 @@ public class CommandService : ICommandService
             }));
     }
 
-    private async Task FoodFallback(Request request)
+    private async Task FoodFallback(TelegramRequest request)
     {
         var callbackCommand = string.Empty;
         switch (request.Message)
@@ -350,7 +351,7 @@ public class CommandService : ICommandService
         }));
     }
 
-    private async Task MinimarketLocationFunc(Request request)
+    private async Task MinimarketLocationFunc(TelegramRequest request)
     {
         await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
         await _telegramBotClient.SendChatActionAsync(request.ChatId, ChatAction.Typing);
@@ -360,7 +361,7 @@ public class CommandService : ICommandService
         await _telegramBotClient.SendLocationAsync(request.ChatId, 50.6632402f, 30.7309756f);
     }
 
-    private async Task SupermarketLocationFunc(Request request)
+    private async Task SupermarketLocationFunc(TelegramRequest request)
     {
         await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
 
@@ -371,7 +372,7 @@ public class CommandService : ICommandService
         await _telegramBotClient.SendLocationAsync(request.ChatId, 50.6030410f, 30.7044328f);
     }
 
-    private async Task TakeoutLocationFunc(Request request)
+    private async Task TakeoutLocationFunc(TelegramRequest request)
     {
         await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
 

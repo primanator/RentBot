@@ -1,23 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using RentBot.Commands.Interfaces;
 using RentBot.Model;
 
-[assembly: InternalsVisibleTo("RentBot.Tests")]
 namespace RentBot.Commands;
 
 public class LinkedCommand : ILinkedCommand
 {
     public string CommandMessage { get; }
     public List<ILinkedCommand> ChildCommands { get; set; }
-    public Func<Request, Task> Function { get; }
-    public Func<Request, Task> Fallback { get; }
+    public Func<TelegramRequest, Task> Function { get; }
+    public Func<TelegramRequest, Task> Fallback { get; }
 
     public LinkedCommand(string commandMessage,
-        Func<Request, Task> function = default,
-        Func<Request, Task> fallback = default)
+        Func<TelegramRequest, Task> function = default,
+        Func<TelegramRequest, Task> fallback = default)
     {
         CommandMessage = commandMessage;
         ChildCommands = new List<ILinkedCommand>();
