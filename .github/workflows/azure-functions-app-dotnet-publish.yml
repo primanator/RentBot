@@ -5,7 +5,7 @@ on:
     branches: ["main"]
 
 env: 
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: './RentBot.sln'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: './RentBot.sln'  # This is your solution file
   DOTNET_VERSION: '6.0.x'
 
 jobs:
@@ -24,14 +24,12 @@ jobs:
     - name: 'Resolve Project Dependencies Using Dotnet'
       shell: pwsh
       run: |
-        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-        dotnet build --configuration Release --output ./output
-        popd
+        dotnet build ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }} --configuration Release --output ./output
 
     - name: 'Run Azure Functions Action'
       uses: Azure/functions-action@v1
       id: fa
       with:
         app-name: ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
-        package: './output'
+        package: './output'  # This should be the output directory
         publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
