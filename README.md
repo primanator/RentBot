@@ -1,6 +1,6 @@
 # 🏠 Airbnb House Renting Telegram Bot 🤖
 
-[![.NET](https://github.com/primanator/RentBot/actions/workflows/dotnet_build_and_run_unit_tests.yml/badge.svg)](https://github.com/primanator/RentBot/actions/workflows/dotnet_build_and_run_unit_tests.yml)
+[![.NET](https://github.com/primanator/RentBot/actions/workflows/dotnet_build_and_run_unit_tests.yml/badge.svg)](https://github.com/primanator/RentBot/actions/workflows/dotnet_build_and_run_unit_tests.yml) [![Deploy DotNet project to Azure Function App](https://github.com/primanator/RentBot/actions/workflows/azure-functions-app-dotnet-publish.yml/badge.svg)](https://github.com/primanator/RentBot/actions/workflows/azure-functions-app-dotnet-publish.yml)
 
 ![Azure Functions](https://img.shields.io/badge/Azure_Functions-blue?style=flat-square&logo=microsoft-azure&logoColor=white)
 ![Azure Blob Storage](https://img.shields.io/badge/Azure_Blob_Storage-blue?style=flat-square&logo=microsoft-azure&logoColor=white)
