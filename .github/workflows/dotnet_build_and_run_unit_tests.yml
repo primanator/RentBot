@@ -23,6 +23,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore RentBot/RentBot.sln
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build RentBot/RentBot.sln --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test RentBot/RentBot.sln --no-build --verbosity normal
