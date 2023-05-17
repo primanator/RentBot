@@ -36,7 +36,7 @@ To get started with the project, follow these steps:
 
 9. Start using the bot on Telegram! 🎉
 
-For more information on the Telegram webhook setup, refer to the [Telegram API documentation](https://core.telegram.org/bots/api#setwebhook).
+For more information on this project, refer to the [Wiki page](https://github.com/primanator/RentBot/wiki).
 
 ## 💼 Features
 
