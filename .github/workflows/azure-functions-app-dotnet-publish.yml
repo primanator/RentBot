@@ -5,7 +5,7 @@ on:
     branches: ["main"]
 
 env: 
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'RentBot.sln'
   DOTNET_VERSION: '6.0.x'
 
 jobs:
