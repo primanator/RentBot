@@ -5,7 +5,7 @@ on:
     branches: ["main"]
 
 env: 
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: './RentBot.sln'  # This is your solution file
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'RentBot/RentBot.sln'
   DOTNET_VERSION: '6.0.x'
 
 jobs:
@@ -31,5 +31,5 @@ jobs:
       id: fa
       with:
         app-name: ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
-        package: './output'  # This should be the output directory
+        package: './output'
         publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
