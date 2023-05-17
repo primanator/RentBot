@@ -1,4 +1,4 @@
-# 🏠 Airbnb House Renting Telegram Bot 🤖
+# 🏠 Airbnb House Renting Telegram Bot 🤖 [![.NET](https://github.com/primanator/RentBot/actions/workflows/dotnet_build_and_run_unit_tests.yml/badge.svg)](https://github.com/primanator/RentBot/actions/workflows/dotnet_build_and_run_unit_tests.yml)
 
 ![Azure Functions](https://img.shields.io/badge/Azure_Functions-blue?style=flat-square&logo=microsoft-azure&logoColor=white)
 ![Azure Blob Storage](https://img.shields.io/badge/Azure_Blob_Storage-blue?style=flat-square&logo=microsoft-azure&logoColor=white)
