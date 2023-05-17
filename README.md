@@ -1,13 +1,13 @@
 # 🏠 Airbnb House Renting Telegram Bot 🤖
 
-[![.NET](https://github.com/primanator/RentBot/actions/workflows/dotnet_build_and_run_unit_tests.yml/badge.svg)](https://github.com/primanator/RentBot/actions/workflows/dotnet_build_and_run_unit_tests.yml) [![Deploy DotNet project to Azure Function App](https://github.com/primanator/RentBot/actions/workflows/azure-functions-app-dotnet-publish.yml/badge.svg)](https://github.com/primanator/RentBot/actions/workflows/azure-functions-app-dotnet-publish.yml)
-
 ![Azure Functions](https://img.shields.io/badge/Azure_Functions-blue?style=flat-square&logo=microsoft-azure&logoColor=white)
 ![Azure Blob Storage](https://img.shields.io/badge/Azure_Blob_Storage-blue?style=flat-square&logo=microsoft-azure&logoColor=white)
 ![Telegram Bot](https://img.shields.io/badge/Telegram_Bot-blue?style=flat-square&logo=telegram&logoColor=white)
 ![Postman](https://img.shields.io/badge/Postman-orange?style=flat-square&logo=postman&logoColor=white)
 ![Telegram API](https://img.shields.io/badge/Telegram_API-blue?style=flat-square&logo=telegram&logoColor=white)
 ![.NET](https://img.shields.io/badge/.NET-blue?style=flat-square&logo=.net&logoColor=white)
+
+[![.NET](https://github.com/primanator/RentBot/actions/workflows/dotnet_build_and_run_unit_tests.yml/badge.svg)](https://github.com/primanator/RentBot/actions/workflows/dotnet_build_and_run_unit_tests.yml) [![Deploy DotNet project to Azure Function App](https://github.com/primanator/RentBot/actions/workflows/azure-functions-app-dotnet-publish.yml/badge.svg)](https://github.com/primanator/RentBot/actions/workflows/azure-functions-app-dotnet-publish.yml)
 
 Welcome to the Airbnb House Renting Telegram Bot! This project is a Telegram bot that uses webhooks and Azure Functions to assist users in finding and renting the perfect Airbnb property. The bot also leverages Azure Blob Storage to store and manage property data. 🌟
 
