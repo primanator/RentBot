@@ -127,27 +127,14 @@ public class CommandService : ICommandService
             await _telegramBotClient.AnswerCallbackQueryAsync(request.CallbackQueryId, "Got it!");
         }
 
-        string responseText;
         var name = request.User.FirstName + (string.IsNullOrEmpty(request.User.LastName) ? string.Empty : $" {request.User.LastName}");
 
-        switch (request.Message)
+        var responseText = request.Message switch
         {
-            case Messages.Start:
-                {
-                    responseText = $"Hi, {name}!\nHow can I help you?";
-                    break;
-                }
-            case Messages.FallBack:
-                {
-                    responseText = "Can I help you with anything else?";
-                    break;
-                }
-            default:
-                {
-                    responseText = $"What we were talking about, {name}?";
-                    break;
-                }
-        }
+            Messages.Start => $"Hi, {name}!\nHow can I help you?",
+            Messages.FallBack => "Can I help you with anything else?",
+            _ => $"What we were talking about, {name}?",
+        };
 
         await _telegramBotClient.SendTextMessageAsync(request.ChatId, responseText,
             replyMarkup: new InlineKeyboardMarkup(new[]
@@ -321,29 +308,13 @@ public class CommandService : ICommandService
 
     private async Task FoodFallback(TelegramRequest request)
     {
-        var callbackCommand = string.Empty;
-        switch (request.Message)
+        var callbackCommand = request.Message switch
         {
-            case Messages.Minimarket:
-                {
-                    callbackCommand = Messages.MinimarketLocation;
-                    break;
-                }
-            case Messages.Supermarket:
-                {
-                    callbackCommand = Messages.SupermarketLocation;
-                    break;
-                }
-            case Messages.Takeout:
-                {
-                    callbackCommand = Messages.TakeoutLocation;
-                    break;
-                }
-            default:
-                {
-                    break;
-                }
-        }
+            Messages.Minimarket => Messages.MinimarketLocation,
+            Messages.Supermarket => Messages.SupermarketLocation,
+            Messages.Takeout => Messages.TakeoutLocation,
+            _ => throw new NotImplementedException($"{nameof(FoodFallback)} was not implemented for request.Message: {request.Message}.")
+        };
 
         await _telegramBotClient.SendTextMessageAsync(request.ChatId, "See location?", replyMarkup: new InlineKeyboardMarkup(new[]
         {
