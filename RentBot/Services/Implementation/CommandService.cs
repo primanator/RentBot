@@ -6,7 +6,7 @@ using RentBot.Clients.Interfaces;
 using RentBot.Commands;
 using RentBot.Commands.Interfaces;
 using RentBot.Constants;
-using RentBot.Model;
+using RentBot.Models;
 using RentBot.Services.Interfaces;
 using Telegram.Bot;
 using Telegram.Bot.Types;

@@ -5,7 +5,6 @@ using RentBot.Clients.Implementation;
 using RentBot.Clients.Interfaces;
 using RentBot.Services.Implementation;
 using RentBot.Services.Interfaces;
-using System;
 using Telegram.Bot;
 
 [assembly: FunctionsStartup(typeof(RentBot.Startup))]
@@ -18,7 +17,7 @@ public class Startup : FunctionsStartup
         var configuration = builder.GetContext().Configuration;
 
         builder.Services
-               .AddSingleton<IBlobServiceClientWrapper>(serviceProvider => GetBlobServiceClientWrapper(serviceProvider, configuration))
+               .AddSingleton<IBlobServiceClientWrapper>(serviceProvider => GetBlobServiceClientWrapper(configuration))
                .AddSingleton<ITelegramBotClient>(serviceProvider => GetTelegramBotClient(configuration))
                .AddSingleton<IModelConverterService, ModelConverterService>()
                .AddSingleton<ICommandService, CommandService>()
@@ -33,9 +32,8 @@ public class Startup : FunctionsStartup
         return new TelegramBotClient(botSecret);
     }
 
-    private static BlobServiceClientWrapper GetBlobServiceClientWrapper(IServiceProvider serviceProvider, IConfiguration configuration)
+    private static BlobServiceClientWrapper GetBlobServiceClientWrapper(IConfiguration configuration)
     {
-
         var blobAccountName = configuration["BLOB_ACCOUNT_NAME"];
         var blobAccountKey = configuration["BLOB_ACCOUNT_KEY"];
         var blobContainerName = configuration["BLOB_CONTAINER_NAME"];

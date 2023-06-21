@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using RentBot.Model;
+using RentBot.Models;
 
 namespace RentBot.Commands.Interfaces;
 

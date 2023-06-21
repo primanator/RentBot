@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
-using RentBot.Model;
+using RentBot.Models;
 using System.Threading.Tasks;
 using Telegram.Bot.Types;
 

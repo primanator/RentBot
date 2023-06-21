@@ -2,7 +2,7 @@
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using RentBot.Model;
+using RentBot.Models;
 using RentBot.Services.Interfaces;
 using System.Threading.Tasks;
 using Telegram.Bot.Types;

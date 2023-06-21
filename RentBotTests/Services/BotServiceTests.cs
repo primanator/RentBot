@@ -6,7 +6,7 @@ using RentBot.Services.Implementation;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using System;
-using RentBot.Model;
+using RentBot.Models;
 using Telegram.Bot.Types.Enums;
 using System.Collections.Generic;
 using RentBot.Commands;

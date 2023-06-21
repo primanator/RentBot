@@ -2,7 +2,7 @@
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace RentBot.Model;
+namespace RentBot.Models;
 
 public class TelegramRequest
 {
